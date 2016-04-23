@@ -12,7 +12,7 @@ npm install
 ```
 
 ```
-node server
+npm run server
 ```
 
 visit `http://localhost:9999`
