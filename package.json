@@ -4,7 +4,8 @@
   "description": "slither game",
   "main": "main.js",
   "scripts": {
-    "server": "node server.js"
+    "server": "node server.js",
+    "release": "webpack && git status && git add -A && git commit -a -m update && git push"
   },
   "keywords": [
     "game",
