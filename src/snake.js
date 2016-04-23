@@ -13,7 +13,7 @@ class Base {
     this.ctx = options.ctx;
     this.x = options.x;
     this.y = options.y;
-    this.c = options.c || 0;
+    this.color = options.color;
     this.r = 20;
 
     this.vx = 0;
@@ -38,8 +38,8 @@ class Base {
     ctx.save();
     ctx.beginPath();
     ctx.arc(this.img.width / 2, this.img.height / 2, this.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${this.c},${this.c},${this.c})`;
-    ctx.strokeStyle = `rgb(255,255,255)`;
+    ctx.fillStyle = this.color || `#333`;
+    ctx.strokeStyle = `#fff`;
     ctx.stroke();
     ctx.fill();
     ctx.restore();
@@ -101,10 +101,10 @@ export default class Snake extends Base {
   constructor(options) {
     super(options);
 
+    this.vx = SPEED;
     this.angle = 0;
-    this.bodyLength = 20;
-    this.bodyDis = this.r * 2 / 3;
-    this.bodyColor = ~~(240 / this.bodyLength);
+    this.bodyLength = 30;
+    this.bodyDis = this.r/2;
     this.initBody();
   }
 
@@ -140,17 +140,15 @@ export default class Snake extends Base {
   initBody() {
     this.bodys = [];
     let x = this.x;
-    let c = this.c;
 
     for (let i = 0; i < this.bodyLength; i++) {
       x -= this.bodyDis;
-      c += this.bodyColor;
 
       this.bodys.push(new Body({
         ctx: this.ctx,
         x,
         y: this.y,
-        c,
+        color: this.color,
         dis: this.bodyDis
       }));
     }
