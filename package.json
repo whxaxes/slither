@@ -1,0 +1,25 @@
+{
+  "name": "slither",
+  "version": "1.0.0",
+  "description": "slither game",
+  "main": "main.js",
+  "scripts": {
+    "server": "node server.js"
+  },
+  "keywords": [
+    "game",
+    "slither"
+  ],
+  "dependencies": {
+    "babel": "5.3.1",
+    "babel-core": "^5.6.15",
+    "babel-loader": "^5.2.2",
+    "bluebird": "^2.9.34",
+    "babel-eslint": "^3.1.9",
+    "webpack": "^1.12.14",
+    "webpack-dev-server": "^1.8.2"
+  },
+  "author": "wanghx",
+  "license": "MIT",
+  "devDependencies": {}
+}
