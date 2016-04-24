@@ -35,7 +35,14 @@ function init() {
   const snake = new Snake({
     ctx,
     x: canvas.width / 2,
-    y: canvas.height / 2
+    y: canvas.height / 2,
+    r: 30,
+    color: {
+      r: ~~(255 - Math.random() * 120),
+      g: ~~(255 - Math.random() * 120),
+      b: ~~(255 - Math.random() * 120),
+      a: 1
+    }
   });
 
   sprites.push(snake);
