@@ -40,15 +40,7 @@ function init() {
 
   sprites.push(snake);
 
-  let mousetimeout;
   window.onmousemove = function(e) {
-    if(mousetimeout) return;
-
-    mousetimeout = setTimeout(
-      ()=>mousetimeout = null,
-      100
-    );
-
     e = e || window.event;
 
     snake.moveTo(
