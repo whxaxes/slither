@@ -39,6 +39,7 @@ class Base {
     this.img.height = this.r * 2 + 10;
     this.imgctx = this.img.getContext('2d');
 
+    this.imgctx.lineWidth = 2;
     this.imgctx.save();
     this.imgctx.beginPath();
     this.imgctx.arc(this.img.width / 2, this.img.height / 2, this.r, 0, Math.PI * 2);
@@ -139,45 +140,89 @@ class Header extends Base {
    */
   createImage() {
     super.createImage();
-    const eye_r = this.r * 2 / 5;
-    let eye_x = this.img.width / 2 + this.r - eye_r;
-    let eye_y = this.img.height / 2 - this.r + eye_r;
+    const self = this;
+    const eye_r = this.r * 3 / 7;
 
     // 画左眼
-    this.imgctx.beginPath();
-    this.imgctx.fillStyle = '#fff';
-    this.imgctx.strokeStyle = this.color_2;
-    this.imgctx.arc(eye_x, eye_y, eye_r, 0, Math.PI * 2);
-    this.imgctx.fill();
-    this.imgctx.stroke();
-    this.imgctx.fillStyle = '#000';
-    this.imgctx.fillRect(eye_x + eye_r / 2, eye_y - 1, 2, 2);
+    drawEye(
+      this.img.width / 2 + this.r - eye_r,
+      this.img.height / 2 - this.r + eye_r
+    );
 
     // 画右眼
-    eye_y = this.img.height / 2 + this.r - eye_r;
-    this.imgctx.beginPath();
-    this.imgctx.fillStyle = '#fff';
-    this.imgctx.arc(eye_x, eye_y, eye_r, 0, Math.PI * 2);
-    this.imgctx.fill();
-    this.imgctx.stroke();
-    this.imgctx.fillStyle = '#000';
-    this.imgctx.fillRect(eye_x + eye_r / 2, eye_y - 1, 2, 2);
+    drawEye(
+      this.img.width / 2 + this.r - eye_r,
+      this.img.height / 2 + this.r - eye_r
+    );
+
+    function drawEye(eye_x, eye_y) {
+      self.imgctx.beginPath();
+      self.imgctx.fillStyle = '#fff';
+      self.imgctx.strokeStyle = self.color_2;
+      self.imgctx.arc(eye_x, eye_y, eye_r, 0, Math.PI * 2);
+      self.imgctx.fill();
+      self.imgctx.stroke();
+
+      self.imgctx.beginPath();
+      self.imgctx.fillStyle = '#000';
+      self.imgctx.arc(eye_x + eye_r / 2, eye_y, 3, 0, Math.PI * 2);
+      self.imgctx.fill();
+    }
   }
 
   /**
    * 移动的同时, 还需要根据移动方向计算角度
    */
   moveTo(x, y) {
-    super.moveTo(x, y);
+    if (!this.aims.length)
+      return this.aims.push({x, y});
 
-    // 调整头部的方向
-    this.angle = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0);
+    const oldaim = this.aims[this.aims.length - 1];
+    const dis_x = x - oldaim.x;
+    const dis_y = y - oldaim.y;
+    const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+
+    if (dis > 30) {
+      const fen = ~~(dis / 30);
+      for (let i = 1; i <= fen; i++) {
+        if(this.aims.length > 10) this.aims.shift();
+
+        this.aims.push({
+          x: oldaim.x + dis_x * i/fen,
+          y: oldaim.y + dis_y * i/fen
+        });
+      }
+    } else {
+      this.aims[this.aims.length - 1] = {x, y};
+    }
+  }
+
+  update() {
+    const time = new Date();
+
+    if((!this.time || time - this.time > 50) && this.aims.length) {
+      const aim = this.aims.shift();
+
+      super.moveTo(aim.x, aim.y);
+
+      // 调整头部的方向
+      this.angle = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0);
+
+      this.time = time;
+    }
+
+    super.update();
   }
 
   /**
    * 根据角度来绘制不同方向的蛇头
    */
   render() {
+    const self = this;
+    this.aims.forEach(function(aim){
+      self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
+    });
+
     // 要旋转至相应角度
     this.ctx.save();
     this.ctx.translate(this.x, this.y);
@@ -197,8 +242,8 @@ export default class Snake {
 
     // 创建身躯
     this.bodys = [];
-    let body_dis = options.r * 2 / 3;
-    for (let i = 0; i < 30; i++) {
+    let body_dis = options.r * 2 / 5;
+    for (let i = 0; i < 40; i++) {
       options.x -= body_dis;
       options.r -= 0.2;
 
