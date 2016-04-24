@@ -64,6 +64,11 @@ class Base {
     this.vx = dis_x * (SPEED / dis);
   }
 
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
   /**
    * 渲染镜像图片
    */
@@ -81,22 +86,35 @@ class Body extends Base {
   constructor(options) {
     super(options);
 
-    this.dis = options.dis;
+    this.aims = [];
+  }
+
+  // 身躯跟头部的运动轨迹不同, 身躯要走完当前目标后才进入下一个目标
+  moveTo(x, y) {
+    this.aims.push({x, y});
+
+    if (this.tox == this.x && this.toy == this.y) {
+      let naim = this.aims.shift();
+      super.moveTo(naim.x, naim.y);
+    }
   }
 
   update() {
-    const dis_x = this.tox - this.x;
-    const dis_y = this.toy - this.y;
-    const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+    super.update();
 
-    if (dis <= this.dis) return;
+    // 到达目的地设置x为目标x
+    if (Math.abs(this.tox - this.x) <= SPEED) {
+      this.x = this.tox;
+    }
 
-    this.x += this.vx;
-    this.y += this.vy;
+    // 到达目的地设置y为目标y
+    if (Math.abs(this.toy - this.y) <= SPEED) {
+      this.y = this.toy;
+    }
   }
 }
 
-// 蛇类
+// 蛇类, 其实就是蛇头
 export default class Snake extends Base {
   constructor(options) {
     super(options);
@@ -104,7 +122,7 @@ export default class Snake extends Base {
     this.vx = SPEED;
     this.angle = 0;
     this.bodyLength = 30;
-    this.bodyDis = this.r/2;
+    this.bodyDis = this.r * 2 / 3;
     this.initBody();
   }
 
@@ -148,8 +166,7 @@ export default class Snake extends Base {
         ctx: this.ctx,
         x,
         y: this.y,
-        color: this.color,
-        dis: this.bodyDis
+        color: this.color
       }));
     }
   }
@@ -160,14 +177,9 @@ export default class Snake extends Base {
     // 调整头部的方向
     this.angle = Math.atan(this.vy / this.vx);
 
-    if(this.vx < 0) {
+    if (this.vx < 0) {
       this.angle += Math.PI
     }
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
   }
 
   render() {
@@ -183,13 +195,10 @@ export default class Snake extends Base {
 
     this.update();
 
+    // 要旋转至相应角度
     const ctx = this.ctx;
-
     ctx.save();
-    ctx.translate(
-      this.x,
-      this.y
-    );
+    ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
     ctx.drawImage(this.img, -this.img.width / 2, -this.img.height / 2);
     ctx.restore();
