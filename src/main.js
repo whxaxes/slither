@@ -7,6 +7,7 @@
 'use strict';
 
 import Snake from './snake';
+import Stats from './third/stats.min';
 
 const sprites = [];
 const RAF = window.requestAnimationFrame
@@ -22,6 +23,13 @@ const canvas = document.getElementById('cas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+const stats = new Stats();
+stats.setMode(0);
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.right = '0px';
+stats.domElement.style.top = '0px';
+document.body.appendChild( stats.domElement );
 
 function init() {
   const snake = new Snake({
@@ -53,7 +61,7 @@ function init() {
 }
 
 let time = new Date();
-let timeout = 10;
+let timeout = 0;
 function animate() {
   const ntime = new Date();
 
@@ -66,6 +74,8 @@ function animate() {
 
     time = ntime;
   }
+
+  stats.update();
 
   RAF(animate);
 }
