@@ -36,7 +36,7 @@ function init() {
     ctx,
     x: canvas.width / 2,
     y: canvas.height / 2,
-    r: 30,
+    r: 25,
     color: {
       r: ~~(255 - Math.random() * 120),
       g: ~~(255 - Math.random() * 120),
