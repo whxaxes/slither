@@ -7,6 +7,7 @@
 'use strict';
 
 const SPEED = 1.8;
+const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
 class Base {
@@ -132,7 +133,8 @@ class Header extends Base {
 
     this.vx = SPEED;
     this.aims = [];
-    this.angle = 0;
+    this.angle = BASE_ANGLE + Math.PI / 2;
+    this.toa = this.angle;
   }
 
   /**
@@ -182,10 +184,9 @@ class Header extends Base {
     const dis_y = y - olderAim.y;
     const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
 
-    if (dis > 30) {
-      const part = ~~(dis / 30);
+    if (dis > 50) {
+      const part = ~~(dis / 50);
       for (let i = 1; i <= part; i++) {
-
         // 记录的目标点不超过20个
         if (this.aims.length > 20)
           this.aims.shift();
@@ -200,6 +201,9 @@ class Header extends Base {
     }
   }
 
+  /**
+   * 增加蛇头的逐帧逻辑
+   */
   update() {
     const time = new Date();
 
@@ -207,15 +211,53 @@ class Header extends Base {
     if ((!this.time || time - this.time > 50) && this.aims.length) {
       const aim = this.aims.shift();
 
+      // 调用父类的moveTo, 让蛇头朝目标移动
       super.moveTo(aim.x, aim.y);
 
-      // 调整头部的方向
-      this.angle = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0);
+      // 根据新的目标位置, 更新toa
+      this.turnTo();
 
       this.time = time;
     }
 
+    // 让蛇转头
+    this.turnAround();
+
     super.update();
+  }
+
+  /**
+   * 根据蛇的目的地, 调整蛇头的目标角度
+   */
+  turnTo() {
+    const olda = Math.abs(this.toa % (Math.PI * 2));
+    let rounds = ~~(this.toa / (Math.PI * 2));
+    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2;
+
+    // 角度从第一象限左划至第四象限,
+    if (olda >= Math.PI * 3 / 2 && this.toa <= Math.PI / 2) {
+      rounds++;
+    } else if (olda <= Math.PI / 2 && this.toa >= Math.PI * 3 / 2) {
+      rounds--;
+    }
+
+    this.toa += rounds * Math.PI * 2;
+  }
+
+  /**
+   * 让蛇头转角更加平滑, 渐增转头
+   */
+  turnAround() {
+    const angle_dis = this.toa - this.angle;
+
+    if(angle_dis) {
+      this.angle += angle_dis * 0.2;
+
+      // 当转到目标角度, 重置蛇头角度
+      if (Math.abs(angle_dis) <= 0.01) {
+        this.toa = this.angle = BASE_ANGLE + this.toa % (Math.PI * 2)
+      }
+    }
   }
 
   /**
@@ -223,15 +265,15 @@ class Header extends Base {
    */
   render() {
     //绘制补间点
-    //const self = this;
-    //this.aims.forEach(function(aim){
-    //  self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
-    //});
+    const self = this;
+    this.aims.forEach(function(aim) {
+      self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
+    });
 
     // 要旋转至相应角度
     this.ctx.save();
     this.ctx.translate(this.x, this.y);
-    this.ctx.rotate(this.angle);
+    this.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
     super.render(0, 0);
     this.ctx.restore();
   }

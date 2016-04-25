@@ -1,20 +1,22 @@
 # slither
 
-模仿slither.io游戏
+Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
-## 目的
+## Preview
 
-最近slither.io那么火, 于是就写着玩玩吧, 尚未完成, 先开坑, 不定时更新
+> It's not completed yet， I will continually updated
 
-当前完成效果预览：[http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
+[http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
-## 安装 
+## Installation 
+
+step 1
 ```
 npm install
 ```
-
+step 2
 ```
 npm run server
 ```
 
-visit `http://localhost:9999`
+Open your chrome and visit `http://localhost:9999`
