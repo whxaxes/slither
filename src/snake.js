@@ -183,12 +183,13 @@ class Header extends Base {
     const dis_x = x - olderAim.x;
     const dis_y = y - olderAim.y;
     const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+    const min = 20;
 
-    if (dis > 50) {
-      const part = ~~(dis / 50);
+    if (dis > min) {
+      const part = ~~(dis / min);
       for (let i = 1; i <= part; i++) {
         // 记录的目标点不超过20个
-        if (this.aims.length > 20)
+        if (this.aims.length > 30)
           this.aims.shift();
 
         this.aims.push({
@@ -208,7 +209,7 @@ class Header extends Base {
     const time = new Date();
 
     // 每隔一段时间获取一次目标位置集合中的数据, 进行移动
-    if ((!this.time || time - this.time > 50) && this.aims.length) {
+    if ((!this.time || time - this.time > 30) && this.aims.length) {
       const aim = this.aims.shift();
 
       // 调用父类的moveTo, 让蛇头朝目标移动
@@ -230,17 +231,19 @@ class Header extends Base {
    * 根据蛇的目的地, 调整蛇头的目标角度
    */
   turnTo() {
-    const olda = Math.abs(this.toa % (Math.PI * 2));
-    let rounds = ~~(this.toa / (Math.PI * 2));
-    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2;
+    const olda = Math.abs(this.toa % (Math.PI * 2));// 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
+    let rounds = ~~(this.toa / (Math.PI * 2));      // 转了多少圈
+    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2; // 目标角度
 
-    // 角度从第一象限左划至第四象限,
     if (olda >= Math.PI * 3 / 2 && this.toa <= Math.PI / 2) {
+      // 角度从第一象限左划至第四象限, 增加圈数
       rounds++;
     } else if (olda <= Math.PI / 2 && this.toa >= Math.PI * 3 / 2) {
+      // 角度从第四象限划至第一象限, 减少圈数
       rounds--;
     }
 
+    // 计算真实要转到的角度
     this.toa += rounds * Math.PI * 2;
   }
 
@@ -265,10 +268,10 @@ class Header extends Base {
    */
   render() {
     //绘制补间点
-    const self = this;
-    this.aims.forEach(function(aim) {
-      self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
-    });
+    //const self = this;
+    //this.aims.forEach(function(aim) {
+    //  self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
+    //});
 
     // 要旋转至相应角度
     this.ctx.save();

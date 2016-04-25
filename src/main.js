@@ -6,7 +6,7 @@
  */
 'use strict';
 
-import Snake from './snake';
+import Snake from './Snake';
 import Stats from './third/stats.min';
 
 const sprites = [];
