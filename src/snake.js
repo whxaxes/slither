@@ -171,25 +171,28 @@ class Header extends Base {
   }
 
   /**
-   * 移动的同时, 还需要根据移动方向计算角度
+   * 这里不进行真正的移动, 而是计算移动位置与目前位置的补间位置, 目的是为了让蛇的转弯不那么突兀
    */
   moveTo(x, y) {
     if (!this.aims.length)
       return this.aims.push({x, y});
 
-    const oldaim = this.aims[this.aims.length - 1];
-    const dis_x = x - oldaim.x;
-    const dis_y = y - oldaim.y;
+    const olderAim = this.aims[this.aims.length - 1];
+    const dis_x = x - olderAim.x;
+    const dis_y = y - olderAim.y;
     const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
 
     if (dis > 30) {
-      const fen = ~~(dis / 30);
-      for (let i = 1; i <= fen; i++) {
-        if(this.aims.length > 10) this.aims.shift();
+      const part = ~~(dis / 30);
+      for (let i = 1; i <= part; i++) {
+
+        // 记录的目标点不超过20个
+        if (this.aims.length > 20)
+          this.aims.shift();
 
         this.aims.push({
-          x: oldaim.x + dis_x * i/fen,
-          y: oldaim.y + dis_y * i/fen
+          x: olderAim.x + dis_x * i / part,
+          y: olderAim.y + dis_y * i / part
         });
       }
     } else {
@@ -200,7 +203,8 @@ class Header extends Base {
   update() {
     const time = new Date();
 
-    if((!this.time || time - this.time > 50) && this.aims.length) {
+    // 每隔一段时间获取一次目标位置集合中的数据, 进行移动
+    if ((!this.time || time - this.time > 50) && this.aims.length) {
       const aim = this.aims.shift();
 
       super.moveTo(aim.x, aim.y);
@@ -218,10 +222,11 @@ class Header extends Base {
    * 根据角度来绘制不同方向的蛇头
    */
   render() {
-    const self = this;
-    this.aims.forEach(function(aim){
-      self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
-    });
+    //绘制补间点
+    //const self = this;
+    //this.aims.forEach(function(aim){
+    //  self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
+    //});
 
     // 要旋转至相应角度
     this.ctx.save();
@@ -237,13 +242,15 @@ class Header extends Base {
  */
 export default class Snake {
   constructor(options) {
+    this.length = options.length;
+
     // 创建脑袋
     this.header = new Header(options);
 
     // 创建身躯
     this.bodys = [];
-    let body_dis = options.r * 2 / 5;
-    for (let i = 0; i < 40; i++) {
+    let body_dis = options.r * 0.6;
+    for (let i = 0; i < this.length; i++) {
       options.x -= body_dis;
       options.r -= 0.2;
 

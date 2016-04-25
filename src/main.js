@@ -37,10 +37,11 @@ function init() {
     x: canvas.width / 2,
     y: canvas.height / 2,
     r: 25,
+    length: 40,
     color: {
-      r: ~~(255 - Math.random() * 120),
-      g: ~~(255 - Math.random() * 120),
-      b: ~~(255 - Math.random() * 120),
+      r: 255,
+      g: 255,
+      b: 255,
       a: 1
     }
   });
