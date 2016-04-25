@@ -78,12 +78,15 @@ class Base {
 
   /**
    * 渲染镜像图片
-   * @param nx 渲染的x位置, 可不传
-   * @param ny 渲染的y位置, 可不传
+   * @param tx 平移该位置后渲染, 可不传
+   * @param ty 平移该位置后渲染, 可不传
    */
-  render(nx, ny) {
-    let x = nx === undefined ? this.x : nx;
-    let y = ny === undefined ? this.y : ny;
+  render(tx, ty) {
+    tx = tx || 0;
+    ty = ty || 0;
+
+    let x = this.x + tx;
+    let y = this.y + ty;
 
     this.ctx.drawImage(
       this.img,
@@ -183,12 +186,13 @@ class Header extends Base {
     const dis_x = x - olderAim.x;
     const dis_y = y - olderAim.y;
     const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+    const min = 20;
 
-    if (dis > 50) {
-      const part = ~~(dis / 50);
+    if (dis > min) {
+      const part = ~~(dis / min);
       for (let i = 1; i <= part; i++) {
         // 记录的目标点不超过20个
-        if (this.aims.length > 20)
+        if (this.aims.length > 30)
           this.aims.shift();
 
         this.aims.push({
@@ -208,7 +212,7 @@ class Header extends Base {
     const time = new Date();
 
     // 每隔一段时间获取一次目标位置集合中的数据, 进行移动
-    if ((!this.time || time - this.time > 50) && this.aims.length) {
+    if ((!this.time || time - this.time > 30) && this.aims.length) {
       const aim = this.aims.shift();
 
       // 调用父类的moveTo, 让蛇头朝目标移动
@@ -230,17 +234,19 @@ class Header extends Base {
    * 根据蛇的目的地, 调整蛇头的目标角度
    */
   turnTo() {
-    const olda = Math.abs(this.toa % (Math.PI * 2));
-    let rounds = ~~(this.toa / (Math.PI * 2));
-    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2;
+    const olda = Math.abs(this.toa % (Math.PI * 2));// 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
+    let rounds = ~~(this.toa / (Math.PI * 2));      // 转了多少圈
+    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2; // 目标角度
 
-    // 角度从第一象限左划至第四象限,
     if (olda >= Math.PI * 3 / 2 && this.toa <= Math.PI / 2) {
+      // 角度从第一象限左划至第四象限, 增加圈数
       rounds++;
     } else if (olda <= Math.PI / 2 && this.toa >= Math.PI * 3 / 2) {
+      // 角度从第四象限划至第一象限, 减少圈数
       rounds--;
     }
 
+    // 计算真实要转到的角度
     this.toa += rounds * Math.PI * 2;
   }
 
@@ -250,7 +256,7 @@ class Header extends Base {
   turnAround() {
     const angle_dis = this.toa - this.angle;
 
-    if(angle_dis) {
+    if (angle_dis) {
       this.angle += angle_dis * 0.2;
 
       // 当转到目标角度, 重置蛇头角度
@@ -263,18 +269,28 @@ class Header extends Base {
   /**
    * 根据角度来绘制不同方向的蛇头
    */
-  render() {
+  render(tx, ty) {
     //绘制补间点
-    const self = this;
-    this.aims.forEach(function(aim) {
-      self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
-    });
+    //const self = this;
+    //this.aims.forEach(function(aim) {
+    //  self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
+    //});
+
+    tx = tx || 0;
+    ty = ty || 0;
+
+    let x = this.x + tx;
+    let y = this.y + ty;
 
     // 要旋转至相应角度
     this.ctx.save();
-    this.ctx.translate(this.x, this.y);
+    this.ctx.translate(x, y);
     this.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
-    super.render(0, 0);
+    this.ctx.drawImage(
+      this.img,
+      -this.img.width / 2,
+      -this.img.height / 2
+    );
     this.ctx.restore();
   }
 }
@@ -284,6 +300,8 @@ class Header extends Base {
  */
 export default class Snake {
   constructor(options) {
+    this.tx = options.tx || 0;
+    this.ty = options.ty || 0;
     this.length = options.length;
 
     // 创建脑袋
@@ -301,13 +319,34 @@ export default class Snake {
   }
 
   /**
+   * 平移位置
+   * @param x
+   * @param y
+   */
+  translate(x, y) {
+    this.tx += x;
+    this.ty += y;
+  }
+
+  /**
+   * 获取蛇位置
+   * @returns {{x: (number|*), y: (*|Number)}}
+   */
+  getArea() {
+    return {
+      x: this.header.x,
+      y: this.header.y
+    }
+  }
+
+  /**
    * 蛇的移动就是头部的移动
    */
   moveTo(x, y) {
     this.header.moveTo(x, y);
   }
 
-  render() {
+  render(tx, ty) {
     // 蛇的身躯沿着蛇头的运动轨迹运动
     for (let i = this.bodys.length - 1; i >= 0; i--) {
       let body = this.bodys[i];
@@ -316,10 +355,10 @@ export default class Snake {
       body.moveTo(front.x, front.y);
 
       body.update();
-      body.render();
+      body.render(this.tx, this.ty);
     }
 
     this.header.update();
-    this.header.render();
+    this.header.render(this.tx, this.ty);
   }
 }
