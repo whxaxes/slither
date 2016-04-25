@@ -6,7 +6,7 @@ Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
 > It's not completed yet， I will continually updated
 
-### [http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
+[http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
 ## Installation 
 
