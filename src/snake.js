@@ -6,16 +6,16 @@
  */
 'use strict';
 
+import map from './map';
+
 const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
 class Base {
   constructor(options) {
-    this.ctx = options.ctx;
     this.x = options.x;
     this.y = options.y;
     this.r = options.r;
-    this.frame = options.frame;
     this.speed = options.speed;
     this.aims = [];
 
@@ -38,7 +38,7 @@ class Base {
    * @returns {number}
    */
   get paintX() {
-    return this.x - this.frame.x;
+    return this.x - map.frame.x;
   }
 
   /**
@@ -46,7 +46,7 @@ class Base {
    * @returns {number}
    */
   get paintY() {
-    return this.y - this.frame.y;
+    return this.y - map.frame.y;
   }
 
   /**
@@ -58,9 +58,9 @@ class Base {
     const paintY = this.paintY;
 
     return (paintX + this.r > 0)
-      && (paintX - this.r < this.frame.w)
+      && (paintX - this.r < map.frame.w)
       && (paintY + this.r > 0)
-      && (paintY - this.r < this.frame.h)
+      && (paintY - this.r < map.frame.h)
   }
 
   /**
@@ -117,13 +117,13 @@ class Base {
 
     // 如果该对象有角度属性, 则使用translate来绘制, 因为要旋转
     if (this.hasOwnProperty('angle')) {
-      this.ctx.save();
-      this.ctx.translate(this.paintX, this.paintY);
-      this.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
-      this.ctx.drawImage(this.img, -this.img.width / 2, -this.img.height / 2);
-      this.ctx.restore();
+      map.ctx.save();
+      map.ctx.translate(this.paintX, this.paintY);
+      map.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
+      map.ctx.drawImage(this.img, -this.img.width / 2, -this.img.height / 2);
+      map.ctx.restore();
     } else {
-      this.ctx.drawImage(
+      map.ctx.drawImage(
         this.img,
         this.paintX - this.img.width / 2,
         this.paintY - this.img.height / 2
@@ -261,6 +261,19 @@ class Header extends Base {
     this.turnAround();
 
     super.update();
+
+    // 不让蛇走出边界
+    if (this.x < this.r) {
+      this.x = this.r;
+    } else if (this.x + this.r > map.frame.w) {
+      this.x = map.frame.w - this.r;
+    }
+
+    if (this.y < this.r) {
+      this.y = this.r;
+    } else if (this.y + this.r > map.frame.h) {
+      this.y = map.frame.h - this.r;
+    }
   }
 
   /**
@@ -307,7 +320,6 @@ export default class Snake {
   constructor(options) {
     options.speed = options.speed || 1.8;
 
-    this.frame = options.frame;  // 视窗对象
     this.speed = options.speed;  // 蛇的速度
     this.length = options.length; // 蛇的长度
 

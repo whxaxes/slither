@@ -6,9 +6,9 @@
  */
 'use strict';
 
-import Snake from './Snake';
-import Map from './Map';
 import Stats from './third/stats.min';
+import Snake from './snake';
+import map from './map';
 
 const RAF = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame
@@ -19,11 +19,7 @@ const RAF = window.requestAnimationFrame
     window.setTimeout(callback, 1000 / 60)
   };
 
-const canvas = document.getElementById('cas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
+// fps状态
 const stats = new Stats();
 stats.setMode(0);
 stats.domElement.style.position = 'absolute';
@@ -31,42 +27,33 @@ stats.domElement.style.right = '0px';
 stats.domElement.style.top = '0px';
 document.body.appendChild(stats.domElement);
 
-const MAP_WIDTH = 3000;    // 地图宽度
-const MAP_HEIGHT = 3000;   // 地图高度
-const CENTER = {            // 中心地址
-  x: canvas.width / 2,
-  y: canvas.height / 2
-};
-
-// 创建地图对象
-const map = new Map({
-  canvas,
-  width: MAP_WIDTH,
-  height: MAP_HEIGHT,
+// 初始化地图对象
+map.init({
+  canvas: '#cas',
+  width: 3000,
+  height: 3000,
   frame_x: 0,
-  frame_y: 0
+  frame_y: 0,
+  frame_w: window.innerWidth,
+  frame_h: window.innerHeight
 });
-
-// 获取视窗对象
-const frame = map.frame;
 
 // 创建蛇类对象
 const snake = new Snake({
-  ctx,
-  frame,
-  x: CENTER.x,
-  y: CENTER.y,
+  x: map.frame.x + map.frame.w / 2,
+  y: map.frame.y + map.frame.h / 2,
   r: 25,
   length: 40,
   color: '#fff'
 });
 
+// 添加鼠标互动事件
 window.onmousemove = function(e) {
   e = e || window.event;
 
   snake.moveTo(
-    frame.x + e.clientX,
-    frame.y + e.clientY
+    map.frame.x + e.clientX,
+    map.frame.y + e.clientY
   );
 };
 
@@ -76,15 +63,16 @@ function animate() {
   const ntime = new Date();
 
   if (ntime - time > timeout) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    map.clear();
 
     // 位置控制, 保证蛇头位置在视窗中心
-    frame.translate(
-      snake.x - frame.x - CENTER.x,
-      snake.y - frame.y - CENTER.y
+    map.frame.translate(
+      snake.x - map.frame.x - map.frame.w / 2,
+      snake.y - map.frame.y - map.frame.h / 2
     );
 
     map.render();
+
     snake.render();
 
     time = ntime;
