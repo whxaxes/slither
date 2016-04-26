@@ -19,11 +19,7 @@ const RAF = window.requestAnimationFrame
     window.setTimeout(callback, 1000 / 60)
   };
 
-const canvas = document.getElementById('cas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
+// fps状态
 const stats = new Stats();
 stats.setMode(0);
 stats.domElement.style.position = 'absolute';
@@ -31,32 +27,27 @@ stats.domElement.style.right = '0px';
 stats.domElement.style.top = '0px';
 document.body.appendChild(stats.domElement);
 
-const MAP_WIDTH = 3000;    // 地图宽度
-const MAP_HEIGHT = 3000;   // 地图高度
-const CENTER = {            // 中心地址
-  x: canvas.width / 2,
-  y: canvas.height / 2
-};
-
 // 初始化地图对象
 map.init({
-  canvas,
-  width: MAP_WIDTH,
-  height: MAP_HEIGHT,
+  canvas: '#cas',
+  width: 3000,
+  height: 3000,
   frame_x: 0,
-  frame_y: 0
+  frame_y: 0,
+  frame_w: window.innerWidth,
+  frame_h: window.innerHeight
 });
 
 // 创建蛇类对象
 const snake = new Snake({
-  ctx,
-  x: CENTER.x,
-  y: CENTER.y,
+  x: map.frame.x + map.frame.w / 2,
+  y: map.frame.y + map.frame.h / 2,
   r: 25,
   length: 40,
   color: '#fff'
 });
 
+// 添加鼠标互动事件
 window.onmousemove = function(e) {
   e = e || window.event;
 
@@ -72,15 +63,16 @@ function animate() {
   const ntime = new Date();
 
   if (ntime - time > timeout) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    map.clear();
 
     // 位置控制, 保证蛇头位置在视窗中心
     map.frame.translate(
-      snake.x - map.frame.x - CENTER.x,
-      snake.y - map.frame.y - CENTER.y
+      snake.x - map.frame.x - map.frame.w / 2,
+      snake.y - map.frame.y - map.frame.h / 2
     );
 
     map.render();
+
     snake.render();
 
     time = ntime;

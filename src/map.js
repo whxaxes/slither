@@ -1,7 +1,7 @@
 /**
  * Created by wanghx on 4/25/16.
  *
- * Map 由于地图在整个游戏中只有一个, 所以做成单例的
+ * 地图类 由于地图在整个游戏中只有一个, 所以做成单例的
  *
  */
 'use strict';
@@ -13,7 +13,10 @@ class Map {
    * @param options
    */
   init(options) {
-    this.ctx = options.canvas.getContext('2d');
+    this.canvas = document.querySelector(options.canvas);
+    this.ctx = this.canvas.getContext('2d');
+
+    // 地图大小
     this.width = options.width;
     this.height = options.height;
 
@@ -21,10 +24,14 @@ class Map {
     this.block_w = 150;
     this.block_h = 150;
 
-    // 视窗
+    // 设置画布大小
+    this.canvas.width = options.frame_w;
+    this.canvas.height = options.frame_h;
+
+    // 实例化视窗对象
     this.frame = new Frame({
-      w: options.canvas.width,
-      h: options.canvas.height,
+      w: options.frame_w,
+      h: options.frame_h,
       x: options.frame_x,
       y: options.frame_y,
       max_x: this.width - options.frame_x,
@@ -32,6 +39,16 @@ class Map {
     });
   }
 
+  /**
+   * 清空地图上的内容
+   */
+  clear() {
+    this.ctx.clearRect(0, 0, this.frame.w, this.frame.h);
+  }
+
+  /**
+   * 渲染地图
+   */
   render() {
     const frame = this.frame;
     const begin_x = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
