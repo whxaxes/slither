@@ -63,7 +63,7 @@ class Base {
 
     const dis_x = this.tox - this.x;
     const dis_y = this.toy - this.y;
-    const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+    const dis = Math.hypot(dis_x, dis_y);
 
     this.vy = dis_y * (this.speed / dis);
     this.vx = dis_x * (this.speed / dis);
@@ -183,7 +183,7 @@ class Header extends Base {
     const olderAim = this.aims[this.aims.length - 1];
     const dis_x = x - olderAim.x;
     const dis_y = y - olderAim.y;
-    const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
+    const dis = Math.hypot(dis_x, dis_y);
     const min = 20;
 
     if (dis > min) {
