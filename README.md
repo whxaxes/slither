@@ -4,7 +4,7 @@ Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
 ## Preview
 
-> It's not completed yet， I will continually update
+> It's not completed yet，I will update it continually
 
 [http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
