@@ -6,6 +6,8 @@
  */
 'use strict';
 
+import map from './map';
+
 const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
@@ -15,7 +17,6 @@ class Base {
     this.x = options.x;
     this.y = options.y;
     this.r = options.r;
-    this.frame = options.frame;
     this.speed = options.speed;
     this.aims = [];
 
@@ -38,7 +39,7 @@ class Base {
    * @returns {number}
    */
   get paintX() {
-    return this.x - this.frame.x;
+    return this.x - map.frame.x;
   }
 
   /**
@@ -46,7 +47,7 @@ class Base {
    * @returns {number}
    */
   get paintY() {
-    return this.y - this.frame.y;
+    return this.y - map.frame.y;
   }
 
   /**
@@ -58,9 +59,9 @@ class Base {
     const paintY = this.paintY;
 
     return (paintX + this.r > 0)
-      && (paintX - this.r < this.frame.w)
+      && (paintX - this.r < map.frame.w)
       && (paintY + this.r > 0)
-      && (paintY - this.r < this.frame.h)
+      && (paintY - this.r < map.frame.h)
   }
 
   /**
@@ -307,7 +308,6 @@ export default class Snake {
   constructor(options) {
     options.speed = options.speed || 1.8;
 
-    this.frame = options.frame;  // 视窗对象
     this.speed = options.speed;  // 蛇的速度
     this.length = options.length; // 蛇的长度
 

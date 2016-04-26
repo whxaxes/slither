@@ -1,15 +1,18 @@
 /**
  * Created by wanghx on 4/25/16.
  *
- * Map
+ * Map 由于地图在整个游戏中只有一个, 所以做成单例的
  *
  */
 'use strict';
 
 // 地图类
-export default class Map {
-
-  constructor(options) {
+class Map {
+  /**
+   * 初始化map对象
+   * @param options
+   */
+  init(options) {
     this.ctx = options.canvas.getContext('2d');
     this.width = options.width;
     this.height = options.height;
@@ -31,10 +34,10 @@ export default class Map {
 
   render() {
     const frame = this.frame;
-    const begin_x = - frame.x % this.block_w;
-    const begin_y = - frame.y % this.block_h;
-    const end_x = (frame.x + frame.w) - (frame.x + frame.w) % this.block_w;
-    const end_y = (frame.y + frame.h) - (frame.y + frame.h) % this.block_h;
+    const begin_x = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
+    const begin_y = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
+    const end_x = begin_x + frame.w;
+    const end_y = begin_y + frame.h;
 
     // 画方格
     this.ctx.strokeStyle = '#fff';
@@ -67,17 +70,19 @@ class Frame {
     this.y += y;
 
     // 限制视窗x轴的移动位置, 不能超过地图边界
-    if(this.x < 0) {
-      this.x = 0;
-    } else if(this.x > this.max_x) {
-      this.x = this.max_x;
-    }
-
-    // 限制视窗y轴的移动位置, 不能超过地图边界
-    if(this.y < 0) {
-      this.y = 0
-    } else if(this.y > this.max_y) {
-      this.y = this.max_y;
-    }
+    //if(this.x < 0) {
+    //  this.x = 0;
+    //} else if(this.x > this.max_x) {
+    //  this.x = this.max_x;
+    //}
+    //
+    //// 限制视窗y轴的移动位置, 不能超过地图边界
+    //if(this.y < 0) {
+    //  this.y = 0
+    //} else if(this.y > this.max_y) {
+    //  this.y = this.max_y;
+    //}
   }
 }
+
+export default new Map();

@@ -6,9 +6,9 @@
  */
 'use strict';
 
-import Snake from './Snake';
-import Map from './Map';
 import Stats from './third/stats.min';
+import Snake from './snake';
+import map from './map';
 
 const RAF = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame
@@ -38,8 +38,8 @@ const CENTER = {            // 中心地址
   y: canvas.height / 2
 };
 
-// 创建地图对象
-const map = new Map({
+// 初始化地图对象
+map.init({
   canvas,
   width: MAP_WIDTH,
   height: MAP_HEIGHT,
@@ -47,13 +47,9 @@ const map = new Map({
   frame_y: 0
 });
 
-// 获取视窗对象
-const frame = map.frame;
-
 // 创建蛇类对象
 const snake = new Snake({
   ctx,
-  frame,
   x: CENTER.x,
   y: CENTER.y,
   r: 25,
@@ -65,8 +61,8 @@ window.onmousemove = function(e) {
   e = e || window.event;
 
   snake.moveTo(
-    frame.x + e.clientX,
-    frame.y + e.clientY
+    map.frame.x + e.clientX,
+    map.frame.y + e.clientY
   );
 };
 
@@ -79,9 +75,9 @@ function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 位置控制, 保证蛇头位置在视窗中心
-    frame.translate(
-      snake.x - frame.x - CENTER.x,
-      snake.y - frame.y - CENTER.y
+    map.frame.translate(
+      snake.x - map.frame.x - CENTER.x,
+      snake.y - map.frame.y - CENTER.y
     );
 
     map.render();
