@@ -4,7 +4,7 @@ Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
 ## Preview
 
-> It's not completed yet， I will continually updated
+> It's not completed yet，and it will be continually updated
 
 [http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
@@ -22,4 +22,4 @@ npm run server
 Open your chrome and visit `http://localhost:9999`
 
 ## Tutorial
-[Step 1：仿制 slither.io 第一步：先造条蛇](http://www.cnblogs.com/axes/p/5432493.html)<br><br>
+[Step 1：先画条蛇](https://github.com/whxaxes/slither/issues/1)<br><br>
