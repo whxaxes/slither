@@ -15,6 +15,7 @@ class Base {
     this.x = options.x;
     this.y = options.y;
     this.r = options.r;
+    this.frame = options.frame;
     this.speed = options.speed;
     this.aims = [];
 
@@ -30,6 +31,36 @@ class Base {
 
     // 生成元素图片镜像
     this.createImage();
+  }
+
+  /**
+   * 绘制时的x坐标, 要根据视窗来计算位置
+   * @returns {number}
+   */
+  get paintX() {
+    return this.x - this.frame.x;
+  }
+
+  /**
+   * 绘制时的y坐标, 要根据视窗来计算位置
+   * @returns {number}
+   */
+  get paintY() {
+    return this.y - this.frame.y;
+  }
+
+  /**
+   * 在视窗内是否可见
+   * @returns {boolean}
+   */
+  get visible() {
+    const paintX = this.paintX;
+    const paintY = this.paintY;
+
+    return (paintX + this.r > 0)
+      && (paintX - this.r < this.frame.w)
+      && (paintY + this.r > 0)
+      && (paintY - this.r < this.frame.h)
   }
 
   /**
@@ -79,21 +110,25 @@ class Base {
 
   /**
    * 渲染镜像图片
-   * @param tx 平移位置x, 可不传
-   * @param ty 平移位置y, 可不传
    */
-  render(tx, ty) {
-    tx = tx || 0;
-    ty = ty || 0;
+  render() {
+    // 如果该元素在视窗内不可见, 则不进行绘制
+    if (!this.visible) return;
 
-    let x = this.x + tx;
-    let y = this.y + ty;
-
-    this.ctx.drawImage(
-      this.img,
-      x - this.img.width / 2,
-      y - this.img.height / 2
-    );
+    // 如果该对象有角度属性, 则使用translate来绘制, 因为要旋转
+    if (this.hasOwnProperty('angle')) {
+      this.ctx.save();
+      this.ctx.translate(this.paintX, this.paintY);
+      this.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
+      this.ctx.drawImage(this.img, -this.img.width / 2, -this.img.height / 2);
+      this.ctx.restore();
+    } else {
+      this.ctx.drawImage(
+        this.img,
+        this.paintX - this.img.width / 2,
+        this.paintY - this.img.height / 2
+      );
+    }
   }
 }
 
@@ -263,28 +298,6 @@ class Header extends Base {
       }
     }
   }
-
-  /**
-   * 根据角度来绘制不同方向的蛇头
-   */
-  render(tx, ty) {
-    tx = tx || 0;
-    ty = ty || 0;
-
-    let x = this.x + tx;
-    let y = this.y + ty;
-
-    // 要旋转至相应角度
-    this.ctx.save();
-    this.ctx.translate(x, y);
-    this.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
-    this.ctx.drawImage(
-      this.img,
-      -this.img.width / 2,
-      -this.img.height / 2
-    );
-    this.ctx.restore();
-  }
 }
 
 /**
@@ -294,9 +307,8 @@ export default class Snake {
   constructor(options) {
     options.speed = options.speed || 1.8;
 
-    this.speed = options.speed;
-    this.tx = options.tx || 0; // 蛇的平移坐标
-    this.ty = options.ty || 0; // 蛇的平移坐标
+    this.frame = options.frame;  // 视窗对象
+    this.speed = options.speed;  // 蛇的速度
     this.length = options.length; // 蛇的长度
 
     // 创建脑袋
@@ -322,16 +334,6 @@ export default class Snake {
   }
 
   /**
-   * 平移位置
-   * @param x
-   * @param y
-   */
-  translate(x, y) {
-    this.tx += x;
-    this.ty += y;
-  }
-
-  /**
    * 蛇的移动就是头部的移动
    */
   moveTo(x, y) {
@@ -347,14 +349,10 @@ export default class Snake {
       body.moveTo(front.x, front.y);
 
       body.update();
-
-      // 渲染的时候加上蛇类的平移坐标, 使其在指定位置上渲染
-      body.render(this.tx, this.ty);
+      body.render();
     }
 
     this.header.update();
-
-    // 同上
-    this.header.render(this.tx, this.ty);
+    this.header.render();
   }
 }

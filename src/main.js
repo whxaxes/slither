@@ -31,11 +31,11 @@ stats.domElement.style.right = '0px';
 stats.domElement.style.top = '0px';
 document.body.appendChild(stats.domElement);
 
-const MAP_WIDTH = 30000;    // 地图宽度
-const MAP_HEIGHT = 30000;   // 地图高度
+const MAP_WIDTH = 3000;    // 地图宽度
+const MAP_HEIGHT = 3000;   // 地图高度
 const CENTER = {            // 中心地址
-  x: canvas.width/2,
-  y: canvas.height/2
+  x: canvas.width / 2,
+  y: canvas.height / 2
 };
 
 // 创建地图对象
@@ -43,8 +43,8 @@ const map = new Map({
   canvas,
   width: MAP_WIDTH,
   height: MAP_HEIGHT,
-  frame_x: MAP_WIDTH / 2,
-  frame_y: MAP_HEIGHT / 2
+  frame_x: 0,
+  frame_y: 0
 });
 
 // 获取视窗对象
@@ -53,10 +53,9 @@ const frame = map.frame;
 // 创建蛇类对象
 const snake = new Snake({
   ctx,
-  x: frame.x + CENTER.x,
-  y: frame.y + CENTER.y,
-  tx: -frame.x,
-  ty: -frame.y,
+  frame,
+  x: CENTER.x,
+  y: CENTER.y,
   r: 25,
   length: 40,
   color: '#fff'
@@ -73,27 +72,19 @@ window.onmousemove = function(e) {
 
 let time = new Date();
 let timeout = 0;
-animate();
-
 function animate() {
   const ntime = new Date();
 
   if (ntime - time > timeout) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let snakeToFrame_x = snake.x - frame.x;     // 蛇相对于视窗的x坐标
-    let snakeToFrame_y = snake.y - frame.y;     // 蛇相对于视窗的y坐标
-    let needChange_x = CENTER.x - snakeToFrame_x;   // 需要纠正的坐标
-    let needChange_y = CENTER.y - snakeToFrame_y;   // 需要纠正的坐标
-
-    // 将蛇的位置纠正到中心位置
-    snake.translate(needChange_x, needChange_y);
-
-    // 更新视窗位置
-    frame.translate(-needChange_x, -needChange_y);
+    // 位置控制, 保证蛇头位置在视窗中心
+    frame.translate(
+      snake.x - frame.x - CENTER.x,
+      snake.y - frame.y - CENTER.y
+    );
 
     map.render();
-
     snake.render();
 
     time = ntime;
@@ -103,3 +94,5 @@ function animate() {
 
   RAF(animate);
 }
+
+animate();
