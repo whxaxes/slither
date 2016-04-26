@@ -6,7 +6,6 @@
  */
 'use strict';
 
-const SPEED = 1.8;
 const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
@@ -16,9 +15,11 @@ class Base {
     this.x = options.x;
     this.y = options.y;
     this.r = options.r;
+    this.speed = options.speed;
+    this.aims = [];
 
     // 皮肤颜色
-    this.color_1 = `rgba(${options.color.r},${options.color.g},${options.color.b},${options.color.a || 1})`;
+    this.color_1 = options.color;
     // 描边颜色
     this.color_2 = `#000`;
 
@@ -64,8 +65,8 @@ class Base {
     const dis_y = this.toy - this.y;
     const dis = Math.sqrt(dis_x * dis_x + dis_y * dis_y);
 
-    this.vy = dis_y * (SPEED / dis);
-    this.vx = dis_x * (SPEED / dis);
+    this.vy = dis_y * (this.speed / dis);
+    this.vx = dis_x * (this.speed / dis);
   }
 
   /**
@@ -78,8 +79,8 @@ class Base {
 
   /**
    * 渲染镜像图片
-   * @param tx 平移该位置后渲染, 可不传
-   * @param ty 平移该位置后渲染, 可不传
+   * @param tx 平移位置x, 可不传
+   * @param ty 平移位置y, 可不传
    */
   render(tx, ty) {
     tx = tx || 0;
@@ -100,8 +101,6 @@ class Base {
 class Body extends Base {
   constructor(options) {
     super(options);
-
-    this.aims = [];
   }
 
   // 身躯跟头部的运动轨迹不同, 身躯要走完当前目标后才进入下一个目标
@@ -118,12 +117,12 @@ class Body extends Base {
     super.update();
 
     // 到达目的地设置x为目标x
-    if (Math.abs(this.tox - this.x) <= SPEED) {
+    if (Math.abs(this.tox - this.x) <= this.speed) {
       this.x = this.tox;
     }
 
     // 到达目的地设置y为目标y
-    if (Math.abs(this.toy - this.y) <= SPEED) {
+    if (Math.abs(this.toy - this.y) <= this.speed) {
       this.y = this.toy;
     }
   }
@@ -134,8 +133,7 @@ class Header extends Base {
   constructor(options) {
     super(options);
 
-    this.vx = SPEED;
-    this.aims = [];
+    this.vx = this.speed;
     this.angle = BASE_ANGLE + Math.PI / 2;
     this.toa = this.angle;
   }
@@ -270,12 +268,6 @@ class Header extends Base {
    * 根据角度来绘制不同方向的蛇头
    */
   render(tx, ty) {
-    //绘制补间点
-    //const self = this;
-    //this.aims.forEach(function(aim) {
-    //  self.ctx.fillRect(aim.x - 1, aim.y - 1, 2, 2);
-    //});
-
     tx = tx || 0;
     ty = ty || 0;
 
@@ -300,9 +292,12 @@ class Header extends Base {
  */
 export default class Snake {
   constructor(options) {
-    this.tx = options.tx || 0;
-    this.ty = options.ty || 0;
-    this.length = options.length;
+    options.speed = options.speed || 1.8;
+
+    this.speed = options.speed;
+    this.tx = options.tx || 0; // 蛇的平移坐标
+    this.ty = options.ty || 0; // 蛇的平移坐标
+    this.length = options.length; // 蛇的长度
 
     // 创建脑袋
     this.header = new Header(options);
@@ -346,7 +341,7 @@ export default class Snake {
     this.header.moveTo(x, y);
   }
 
-  render(tx, ty) {
+  render() {
     // 蛇的身躯沿着蛇头的运动轨迹运动
     for (let i = this.bodys.length - 1; i >= 0; i--) {
       let body = this.bodys[i];
@@ -355,10 +350,14 @@ export default class Snake {
       body.moveTo(front.x, front.y);
 
       body.update();
+
+      // 渲染的时候加上蛇类的平移坐标, 使其在指定位置上渲染
       body.render(this.tx, this.ty);
     }
 
     this.header.update();
+
+    // 同上
     this.header.render(this.tx, this.ty);
   }
 }
