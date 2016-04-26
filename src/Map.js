@@ -23,7 +23,9 @@ export default class Map {
       w: options.canvas.width,
       h: options.canvas.height,
       x: options.frame_x,
-      y: options.frame_y
+      y: options.frame_y,
+      max_x: this.width - options.frame_x,
+      max_y: this.height - options.frame_y
     });
   }
 
@@ -51,6 +53,8 @@ class Frame {
     this.h = options.h;
     this.x = options.x;
     this.y = options.y;
+    this.max_x = options.max_x;
+    this.max_y = options.max_y;
   }
 
   /**
@@ -61,5 +65,19 @@ class Frame {
   translate(x, y) {
     this.x += x;
     this.y += y;
+
+    // 限制视窗x轴的移动位置, 不能超过地图边界
+    if(this.x < 0) {
+      this.x = 0;
+    } else if(this.x > this.max_x) {
+      this.x = this.max_x;
+    }
+
+    // 限制视窗y轴的移动位置, 不能超过地图边界
+    if(this.y < 0) {
+      this.y = 0
+    } else if(this.y > this.max_y) {
+      this.y = this.max_y;
+    }
   }
 }
