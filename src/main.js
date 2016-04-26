@@ -81,9 +81,8 @@ function animate() {
   if (ntime - time > timeout) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let snakeArea = snake.getArea();
-    let snakeToFrame_x = snakeArea.x - frame.x;     // 蛇相对于视窗的x坐标
-    let snakeToFrame_y = snakeArea.y - frame.y;     // 蛇相对于视窗的y坐标
+    let snakeToFrame_x = snake.x - frame.x;     // 蛇相对于视窗的x坐标
+    let snakeToFrame_y = snake.y - frame.y;     // 蛇相对于视窗的y坐标
     let needChange_x = CENTER.x - snakeToFrame_x;   // 需要纠正的坐标
     let needChange_y = CENTER.y - snakeToFrame_y;   // 需要纠正的坐标
 
