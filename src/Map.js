@@ -29,27 +29,18 @@ export default class Map {
 
   render() {
     const frame = this.frame;
-    const begin_x = this.block_w - frame.x % this.block_w;
-    const begin_y = this.block_h - frame.y % this.block_h;
+    const begin_x = - frame.x % this.block_w;
+    const begin_y = - frame.y % this.block_h;
     const end_x = (frame.x + frame.w) - (frame.x + frame.w) % this.block_w;
     const end_y = (frame.y + frame.h) - (frame.y + frame.h) % this.block_h;
 
-    this.ctx.save();
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = '#aaa';
-
+    // 画方格
+    this.ctx.strokeStyle = '#fff';
     for (let x = begin_x; x <= end_x; x += this.block_w) {
-      this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, frame.h);
+      for (let y = begin_y; y <= end_y; y += this.block_w) {
+        this.ctx.strokeRect(x, y, this.block_w, this.block_h);
+      }
     }
-
-    for (let y = begin_y; y <= end_y; y += this.block_w) {
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(frame.w, y);
-    }
-
-    this.ctx.stroke();
-    this.ctx.restore();
   }
 }
 

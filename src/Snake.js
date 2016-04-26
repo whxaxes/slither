@@ -313,6 +313,14 @@ export default class Snake {
     }
   }
 
+  get x() {
+    return this.header.x;
+  }
+
+  get y() {
+    return this.header.y;
+  }
+
   /**
    * 平移位置
    * @param x
@@ -321,17 +329,6 @@ export default class Snake {
   translate(x, y) {
     this.tx += x;
     this.ty += y;
-  }
-
-  /**
-   * 获取蛇位置
-   * @returns {{x: (number|*), y: (*|Number)}}
-   */
-  getArea() {
-    return {
-      x: this.header.x,
-      y: this.header.y
-    }
   }
 
   /**
