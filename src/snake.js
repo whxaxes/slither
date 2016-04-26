@@ -113,7 +113,9 @@ class Base {
    */
   render() {
     // 如果该元素在视窗内不可见, 则不进行绘制
-    if (!this.visible) return;
+    if (!this.visible) {
+      return;
+    }
 
     // 如果该对象有角度属性, 则使用translate来绘制, 因为要旋转
     if (this.hasOwnProperty('angle')) {
@@ -265,14 +267,14 @@ class Header extends Base {
     // 不让蛇走出边界
     if (this.x < this.r) {
       this.x = this.r;
-    } else if (this.x + this.r > map.frame.w) {
-      this.x = map.frame.w - this.r;
+    } else if (this.x + this.r > map.width) {
+      this.x = map.width - this.r;
     }
 
     if (this.y < this.r) {
       this.y = this.r;
-    } else if (this.y + this.r > map.frame.h) {
-      this.y = map.frame.h - this.r;
+    } else if (this.y + this.r > map.height) {
+      this.y = map.height - this.r;
     }
   }
 

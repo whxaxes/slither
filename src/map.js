@@ -53,8 +53,8 @@ class Map {
     const frame = this.frame;
     const begin_x = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
     const begin_y = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
-    const end_x = begin_x + frame.w;
-    const end_y = begin_y + frame.h;
+    const end_x = begin_x + frame.w + this.block_w;
+    const end_y = begin_y + frame.h + this.block_h;
 
     // 画方格
     this.ctx.strokeStyle = '#fff';
