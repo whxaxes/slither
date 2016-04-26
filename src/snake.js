@@ -89,6 +89,11 @@ class Base {
    * @param y
    */
   moveTo(x, y) {
+    if(Number.isNaN(x)) {
+      console.log(this);
+      throw new Error('ss');
+    }
+
     this.tox = x;
     this.toy = y;
 
@@ -96,8 +101,8 @@ class Base {
     const dis_y = this.toy - this.y;
     const dis = Math.hypot(dis_x, dis_y);
 
-    this.vy = dis_y * (this.speed / dis);
-    this.vx = dis_x * (this.speed / dis);
+    this.vy = dis_y * (this.speed / dis) || 0;
+    this.vx = dis_x * (this.speed / dis) || 0;
   }
 
   /**
@@ -113,9 +118,7 @@ class Base {
    */
   render() {
     // 如果该元素在视窗内不可见, 则不进行绘制
-    if (!this.visible) {
-      return;
-    }
+    if (!this.visible) return;
 
     // 如果该对象有角度属性, 则使用translate来绘制, 因为要旋转
     if (this.hasOwnProperty('angle')) {
