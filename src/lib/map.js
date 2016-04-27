@@ -4,7 +4,6 @@
  * 地图类 由于地图在整个游戏中只有一个, 所以做成单例
  *
  */
-'use strict';
 
 import frame from './frame';
 
@@ -40,27 +39,28 @@ class Map {
    * 渲染地图
    */
   render() {
-    const begin_x = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
-    const begin_y = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
-    const end_x = (frame.x + frame.width > this.width)
+    const beginX = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
+    const beginY = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
+    const endX = (frame.x + frame.width > this.width)
       ? (this.width - frame.x)
-      : (begin_x + frame.width + this.block_w);
-    const end_y = (frame.y + frame.height > this.height)
+      : (beginX + frame.width + this.block_w);
+    const endY = (frame.y + frame.height > this.height)
       ? (this.height - frame.y)
-      : (begin_y + frame.height + this.block_h);
+      : (beginY + frame.height + this.block_h);
 
     // 铺底色
     this.ctx.fillStyle = '#999';
-    this.ctx.fillRect(begin_x, begin_y, end_x - begin_x, end_y - begin_y);
+    this.ctx.fillRect(beginX, beginY, endX - beginX, endY - beginY);
 
     // 画方格砖
     this.ctx.strokeStyle = '#fff';
-    for (let x = begin_x; x <= end_x; x += this.block_w) {
-      for (let y = begin_y; y <= end_y; y += this.block_w) {
-        let cx = end_x - x;
-        let cy = end_y - y;
-        let w = cx < this.block_w ? cx : this.block_w;
-        let h = cy < this.block_h ? cy : this.block_h;
+    for (let x = beginX; x <= endX; x += this.block_w) {
+      for (let y = beginY; y <= endY; y += this.block_w) {
+        const cx = endX - x;
+        const cy = endY - y;
+        const w = cx < this.block_w ? cx : this.block_w;
+        const h = cy < this.block_h ? cy : this.block_h;
+
         this.ctx.strokeRect(x, y, w, h);
       }
     }
@@ -83,8 +83,8 @@ class Map {
     const smrect = 50;
     const smrectw = this.width > this.height ? smrect : (this.width * smrect / this.height);
     const smrecth = this.width > this.height ? (this.height * smrect / this.width) : smrect;
-    const smrectx = smapx - smrectw/2;
-    const smrecty = smapy - smrecth/2;
+    const smrectx = smapx - smrectw / 2;
+    const smrecty = smapy - smrecth / 2;
 
     // 相对比例
     const radio = smrectw / this.width;

@@ -4,7 +4,6 @@
  * snake
  *
  */
-'use strict';
 
 import Base from './base';
 import map from './map';
@@ -22,7 +21,7 @@ class SnakeBase extends Base {
     // 皮肤颜色
     this.color_1 = options.color;
     // 描边颜色
-    this.color_2 = `#000`;
+    this.color_2 = '#000';
 
     // 垂直和水平速度
     this.vx = 0;
@@ -83,12 +82,12 @@ class SnakeBase extends Base {
     this.tox = x;
     this.toy = y;
 
-    const dis_x = this.tox - this.x;
-    const dis_y = this.toy - this.y;
-    const dis = Math.hypot(dis_x, dis_y);
+    const disX = this.tox - this.x;
+    const disY = this.toy - this.y;
+    const dis = Math.hypot(disX, disY);
 
-    this.vy = dis_y * (this.speed / dis) || 0;
-    this.vx = dis_x * (this.speed / dis) || 0;
+    this.vy = disY * (this.speed / dis) || 0;
+    this.vx = disX * (this.speed / dis) || 0;
   }
 
   /**
@@ -125,17 +124,14 @@ class SnakeBase extends Base {
 
 // 蛇的身躯类
 class Body extends SnakeBase {
-  constructor(options) {
-    super(options);
-  }
 
   // 身躯跟头部的运动轨迹不同, 身躯要走完当前目标后才进入下一个目标
   moveTo(x, y) {
-    this.aims.push({x, y});
+    this.aims.push({ x, y });
 
-    if (this.tox == this.x && this.toy == this.y) {
-      let naim = this.aims.shift();
-      this.velocity(naim.x, naim.y);
+    if (this.tox === this.x && this.toy === this.y) {
+      const aim = this.aims.shift();
+      this.velocity(aim.x, aim.y);
     }
   }
 
@@ -170,62 +166,64 @@ class Header extends SnakeBase {
   createImage() {
     super.createImage();
     const self = this;
-    const eye_r = this.width * 0.2;
+    const eyeRadius = this.width * 0.2;
 
-    // 画左眼
-    drawEye(
-      this.img.width / 2 + this.width / 2 - eye_r,
-      this.img.height / 2 - this.height / 2 + eye_r
-    );
-
-    // 画右眼
-    drawEye(
-      this.img.width / 2 + this.width / 2 - eye_r,
-      this.img.height / 2 + this.height / 2 - eye_r
-    );
-
-    function drawEye(eye_x, eye_y) {
+    function drawEye(eyeX, eyeY) {
       self.imgctx.beginPath();
       self.imgctx.fillStyle = '#fff';
       self.imgctx.strokeStyle = self.color_2;
-      self.imgctx.arc(eye_x, eye_y, eye_r, 0, Math.PI * 2);
+      self.imgctx.arc(eyeX, eyeY, eyeRadius, 0, Math.PI * 2);
       self.imgctx.fill();
       self.imgctx.stroke();
 
       self.imgctx.beginPath();
       self.imgctx.fillStyle = '#000';
-      self.imgctx.arc(eye_x + eye_r / 2, eye_y, 3, 0, Math.PI * 2);
+      self.imgctx.arc(eyeX + eyeRadius / 2, eyeY, 3, 0, Math.PI * 2);
       self.imgctx.fill();
     }
+
+    // 画左眼
+    drawEye(
+      this.img.width / 2 + this.width / 2 - eyeRadius,
+      this.img.height / 2 - this.height / 2 + eyeRadius
+    );
+
+    // 画右眼
+    drawEye(
+      this.img.width / 2 + this.width / 2 - eyeRadius,
+      this.img.height / 2 + this.height / 2 - eyeRadius
+    );
   }
 
   /**
    * 这里不进行真正的移动, 而是计算移动位置与目前位置的补间位置, 目的是为了让蛇的转弯不那么突兀
    */
   moveTo(x, y) {
-    if (!this.aims.length)
-      return this.aims.push({x, y});
+    if (!this.aims.length) {
+      return this.aims.push({ x, y });
+    }
 
     const olderAim = this.aims[this.aims.length - 1];
-    const dis_x = x - olderAim.x;
-    const dis_y = y - olderAim.y;
-    const dis = Math.hypot(dis_x, dis_y);
+    const disX = x - olderAim.x;
+    const disY = y - olderAim.y;
+    const dis = Math.hypot(disX, disY);
     const min = 20;
 
     if (dis > min) {
       const part = ~~(dis / min);
       for (let i = 1; i <= part; i++) {
         // 记录的目标点不超过20个
-        if (this.aims.length > 30)
+        if (this.aims.length > 30) {
           this.aims.shift();
+        }
 
         this.aims.push({
-          x: olderAim.x + dis_x * i / part,
-          y: olderAim.y + dis_y * i / part
+          x: olderAim.x + disX * i / part,
+          y: olderAim.y + disY * i / part
         });
       }
     } else {
-      this.aims[this.aims.length - 1] = {x, y};
+      this.aims[this.aims.length - 1] = { x, y };
     }
   }
 
@@ -293,14 +291,14 @@ class Header extends SnakeBase {
    * 让蛇头转角更加平滑, 渐增转头
    */
   turnAround() {
-    const angle_dis = this.toa - this.angle;
+    const angleDistance = this.toa - this.angle;
 
-    if (angle_dis) {
-      this.angle += angle_dis * 0.2;
+    if (angleDistance) {
+      this.angle += angleDistance * 0.2;
 
       // 当转到目标角度, 重置蛇头角度
-      if (Math.abs(angle_dis) <= 0.01) {
-        this.toa = this.angle = BASE_ANGLE + this.toa % (Math.PI * 2)
+      if (Math.abs(angleDistance) <= 0.01) {
+        this.toa = this.angle = BASE_ANGLE + this.toa % (Math.PI * 2);
       }
     }
   }
@@ -340,13 +338,17 @@ export default class Snake {
   speedUp() {
     this.speedRecord = this.header.speed;
     this.header.speed = 5;
-    this.bodys.forEach(b => b.speed = this.header.speed);
+    this.bodys.forEach(b => {
+      b.speed = this.header.speed;
+    });
   }
 
   // 减速
   speedDown() {
     this.header.speed = this.speedRecord;
-    this.bodys.forEach(b => b.speed = this.header.speed);
+    this.bodys.forEach(b => {
+      b.speed = this.header.speed;
+    });
   }
 
   /**
@@ -359,18 +361,18 @@ export default class Snake {
   render() {
     // 蛇的身躯沿着蛇头的运动轨迹运动
     for (let i = this.bodys.length - 1; i >= 0; i--) {
-      let body = this.bodys[i];
-      let front = this.bodys[i - 1] || this.header;
+      const body = this.bodys[i];
+      const front = this.bodys[i - 1] || this.header;
 
       body.moveTo(front.x, front.y);
       body.update();
 
-      //let dis_x = front.x - body.x;
-      //let dis_y = front.y - body.y;
-      //let dis = Math.hypot(dis_x, dis_y);
-      //let radio = (dis - this.body_dis) / dis;
-      //body.x += dis_x * radio;
-      //body.y += dis_y * radio;
+      // let disX = front.x - body.x;
+      // let disY = front.y - body.y;
+      // let dis = Math.hypot(disX, disY);
+      // let radio = (dis - this.body_dis) / dis;
+      // body.x += disX * radio;
+      // body.y += disY * radio;
 
       body.render();
     }

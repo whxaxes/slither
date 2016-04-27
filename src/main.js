@@ -10,7 +10,7 @@ import Snake from './lib/snake';
 import frame from './lib/frame';
 import map from './lib/map';
 
-const RAF = window.requestAnimationFrame
+const raf = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame
   || window.mozRequestAnimationFrame
   || window.oRequestAnimationFrame
@@ -56,7 +56,8 @@ const snake = new Snake({
 });
 
 // 动画逻辑
-let time = new Date(), timeout = 0;
+const timeout = 0;
+let time = new Date();
 function animate() {
   const ntime = new Date();
 
@@ -75,27 +76,25 @@ function animate() {
 
   stats.update();
 
-  RAF(animate);
+  raf(animate);
 }
 
 /**
  * 事件绑定
  */
-function binds(){
-  window.onmousemove = function(e) {
-    e = e || window.event;
-
+function binds() {
+  window.onmousemove = function(e = window.event) {
     snake.moveTo(
       frame.x + e.clientX,
       frame.y + e.clientY
     );
   };
 
-  window.onmousedown = function(){
+  window.onmousedown = function() {
     snake.speedUp();
   };
 
-  window.onmouseup = function(){
+  window.onmouseup = function() {
     snake.speedDown();
   };
 }

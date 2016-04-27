@@ -4,12 +4,11 @@
  * food
  *
  */
-'use strict';
 
 import Base from './base';
 import map from './map';
 
-export class Food extends Base{
+export class Food extends Base {
   constructor(options) {
     super(options);
 
