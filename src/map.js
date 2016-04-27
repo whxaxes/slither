@@ -53,14 +53,22 @@ class Map {
     const frame = this.frame;
     const begin_x = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
     const begin_y = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
-    const end_x = begin_x + frame.w + this.block_w;
-    const end_y = begin_y + frame.h + this.block_h;
+    const end_x = (frame.x + frame.w > this.width)
+      ? (this.width - frame.x)
+      : (begin_x + frame.w + this.block_w);
+    const end_y = (frame.y + frame.h > this.height)
+      ? (this.height - frame.y)
+      : (begin_y + frame.h + this.block_h);
 
     // 画方格
     this.ctx.strokeStyle = '#fff';
     for (let x = begin_x; x <= end_x; x += this.block_w) {
       for (let y = begin_y; y <= end_y; y += this.block_w) {
-        this.ctx.strokeRect(x, y, this.block_w, this.block_h);
+        let cx = end_x - x;
+        let cy = end_y - y;
+        let w = cx < this.block_w ? cx : this.block_w;
+        let h = cy < this.block_h ? cy : this.block_h;
+        this.ctx.strokeRect(x, y, w, h);
       }
     }
   }

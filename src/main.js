@@ -30,8 +30,8 @@ document.body.appendChild(stats.domElement);
 // 初始化地图对象
 map.init({
   canvas: '#cas',
-  width: 3000,
-  height: 3000,
+  width: 5000,
+  height: 5000,
   frame_x: 0,
   frame_y: 0,
   frame_w: window.innerWidth,
@@ -43,7 +43,7 @@ const snake = new Snake({
   x: map.frame.x + map.frame.w / 2,
   y: map.frame.y + map.frame.h / 2,
   r: 25,
-  length: 40,
+  length: 30,
   color: '#fff'
 });
 
@@ -55,6 +55,14 @@ window.onmousemove = function(e) {
     map.frame.x + e.clientX,
     map.frame.y + e.clientY
   );
+};
+
+window.onmousedown = function(){
+  snake.speedUp();
+};
+
+window.onmouseup = function(){
+  snake.speedDown();
 };
 
 let time = new Date();
