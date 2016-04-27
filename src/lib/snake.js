@@ -6,16 +6,16 @@
  */
 'use strict';
 
+import Base from './base';
 import map from './map';
 
 const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
-class Base {
+class SnakeBase extends Base {
   constructor(options) {
-    this.x = options.x;
-    this.y = options.y;
-    this.r = options.r;
+    super(options);
+
     this.speed = options.speed;
     this.aims = [];
 
@@ -24,8 +24,11 @@ class Base {
     // 描边颜色
     this.color_2 = `#000`;
 
+    // 垂直和水平速度
     this.vx = 0;
     this.vy = 0;
+
+    // 目标地址
     this.tox = this.x;
     this.toy = this.y;
 
@@ -52,48 +55,18 @@ class Base {
   }
 
   /**
-   * 绘制时的x坐标, 要根据视窗来计算位置
-   * @returns {number}
-   */
-  get paintX() {
-    return this.x - map.frame.x;
-  }
-
-  /**
-   * 绘制时的y坐标, 要根据视窗来计算位置
-   * @returns {number}
-   */
-  get paintY() {
-    return this.y - map.frame.y;
-  }
-
-  /**
-   * 在视窗内是否可见
-   * @returns {boolean}
-   */
-  get visible() {
-    const paintX = this.paintX;
-    const paintY = this.paintY;
-
-    return (paintX + this.r > 0)
-      && (paintX - this.r < map.frame.w)
-      && (paintY + this.r > 0)
-      && (paintY - this.r < map.frame.h)
-  }
-
-  /**
    * 生成图片镜像
    */
   createImage() {
     this.img = document.createElement('canvas');
-    this.img.width = this.r * 2 + 10;
-    this.img.height = this.r * 2 + 10;
+    this.img.width = this.width + 10;
+    this.img.height = this.height + 10;
     this.imgctx = this.img.getContext('2d');
 
     this.imgctx.lineWidth = 2;
     this.imgctx.save();
     this.imgctx.beginPath();
-    this.imgctx.arc(this.img.width / 2, this.img.height / 2, this.r, 0, Math.PI * 2);
+    this.imgctx.arc(this.img.width / 2, this.img.height / 2, this.width / 2, 0, Math.PI * 2);
     this.imgctx.fillStyle = this.color_1;
     this.imgctx.strokeStyle = this.color_2;
     this.imgctx.stroke();
@@ -151,7 +124,7 @@ class Base {
 }
 
 // 蛇的身躯类
-class Body extends Base {
+class Body extends SnakeBase {
   constructor(options) {
     super(options);
   }
@@ -182,7 +155,7 @@ class Body extends Base {
 }
 
 // 蛇头类
-class Header extends Base {
+class Header extends SnakeBase {
   constructor(options) {
     super(options);
 
@@ -197,18 +170,18 @@ class Header extends Base {
   createImage() {
     super.createImage();
     const self = this;
-    const eye_r = this.r * 3 / 7;
+    const eye_r = this.width * 0.2;
 
     // 画左眼
     drawEye(
-      this.img.width / 2 + this.r - eye_r,
-      this.img.height / 2 - this.r + eye_r
+      this.img.width / 2 + this.width / 2 - eye_r,
+      this.img.height / 2 - this.height / 2 + eye_r
     );
 
     // 画右眼
     drawEye(
-      this.img.width / 2 + this.r - eye_r,
-      this.img.height / 2 + this.r - eye_r
+      this.img.width / 2 + this.width / 2 - eye_r,
+      this.img.height / 2 + this.height / 2 - eye_r
     );
 
     function drawEye(eye_x, eye_y) {
@@ -281,16 +254,18 @@ class Header extends Base {
     super.update();
 
     // 不让蛇走出边界
-    if (this.x < this.r) {
-      this.x = this.r;
-    } else if (this.x + this.r > map.width) {
-      this.x = map.width - this.r;
+    const whalf = this.width / 2;
+    if (this.x < whalf) {
+      this.x = whalf;
+    } else if (this.x + whalf > map.width) {
+      this.x = map.width - whalf;
     }
 
-    if (this.y < this.r) {
-      this.y = this.r;
-    } else if (this.y + this.r > map.height) {
-      this.y = map.height - this.r;
+    const hhalf = this.height / 2;
+    if (this.y < hhalf) {
+      this.y = hhalf;
+    } else if (this.y + hhalf > map.height) {
+      this.y = map.height - hhalf;
     }
   }
 
@@ -345,7 +320,7 @@ export default class Snake {
 
     // 创建身躯
     this.bodys = [];
-    this.body_dis = options.r * 0.6;
+    this.body_dis = this.header.width * 0.3;
     for (let i = 0; i < this.length; i++) {
       options.x -= this.body_dis;
 
