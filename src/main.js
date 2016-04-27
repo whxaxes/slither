@@ -7,8 +7,9 @@
 'use strict';
 
 import Stats from './third/stats.min';
-import Snake from './snake';
-import map from './map';
+import Snake from './lib/snake';
+import frame from './lib/frame';
+import map from './lib/map';
 
 const RAF = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame
@@ -18,6 +19,10 @@ const RAF = window.requestAnimationFrame
   || function(callback) {
     window.setTimeout(callback, 1000 / 60)
   };
+
+const canvas = document.getElementById('cas');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 // fps状态
 const stats = new Stats();
@@ -29,20 +34,24 @@ document.body.appendChild(stats.domElement);
 
 // 初始化地图对象
 map.init({
-  canvas: '#cas',
+  canvas,
   width: 3000,
-  height: 3000,
-  frame_x: 1000,
-  frame_y: 1000,
-  frame_w: window.innerWidth,
-  frame_h: window.innerHeight
+  height: 3000
+});
+
+// 初始化视窗对象
+frame.init({
+  x: 1000,
+  y: 1000,
+  width: canvas.width,
+  height: canvas.height
 });
 
 // 创建蛇类对象
 const snake = new Snake({
-  x: map.frame.x + map.frame.w / 2,
-  y: map.frame.y + map.frame.h / 2,
-  r: 40,
+  x: frame.x + frame.width / 2,
+  y: frame.y + frame.height / 2,
+  size: 80,
   length: 60,
   color: '#fff'
 });
@@ -56,7 +65,7 @@ function animate() {
     map.clear();
 
     // 让视窗跟随蛇的位置更改而更改
-    map.frame.trace(snake);
+    frame.trace(snake);
 
     map.render();
 
@@ -78,8 +87,8 @@ function binds(){
     e = e || window.event;
 
     snake.moveTo(
-      map.frame.x + e.clientX,
-      map.frame.y + e.clientY
+      frame.x + e.clientX,
+      frame.y + e.clientY
     );
   };
 
