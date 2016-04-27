@@ -266,7 +266,7 @@ class Header extends Base {
     if ((!this.time || time - this.time > 30) && this.aims.length) {
       const aim = this.aims.shift();
 
-      // 调用父类的moveTo, 让蛇头朝目标移动
+      // 计算蛇头速度, 让蛇头朝目标移动
       this.velocity(aim.x, aim.y);
 
       // 根据新的目标位置, 更新toa

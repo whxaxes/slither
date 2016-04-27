@@ -30,10 +30,10 @@ document.body.appendChild(stats.domElement);
 // 初始化地图对象
 map.init({
   canvas: '#cas',
-  width: 5000,
-  height: 5000,
-  frame_x: 0,
-  frame_y: 0,
+  width: 3000,
+  height: 3000,
+  frame_x: 1000,
+  frame_y: 1000,
   frame_w: window.innerWidth,
   frame_h: window.innerHeight
 });
@@ -47,37 +47,16 @@ const snake = new Snake({
   color: '#fff'
 });
 
-// 添加鼠标互动事件
-window.onmousemove = function(e) {
-  e = e || window.event;
-
-  snake.moveTo(
-    map.frame.x + e.clientX,
-    map.frame.y + e.clientY
-  );
-};
-
-window.onmousedown = function(){
-  snake.speedUp();
-};
-
-window.onmouseup = function(){
-  snake.speedDown();
-};
-
-let time = new Date();
-let timeout = 0;
+// 动画逻辑
+let time = new Date(), timeout = 0;
 function animate() {
   const ntime = new Date();
 
   if (ntime - time > timeout) {
     map.clear();
 
-    // 位置控制, 保证蛇头位置在视窗中心
-    map.frame.translate(
-      snake.x - map.frame.x - map.frame.w / 2,
-      snake.y - map.frame.y - map.frame.h / 2
-    );
+    // 让视窗跟随蛇的位置更改而更改
+    map.frame.trace(snake);
 
     map.render();
 
@@ -91,4 +70,27 @@ function animate() {
   RAF(animate);
 }
 
+/**
+ * 事件绑定
+ */
+function binds(){
+  window.onmousemove = function(e) {
+    e = e || window.event;
+
+    snake.moveTo(
+      map.frame.x + e.clientX,
+      map.frame.y + e.clientY
+    );
+  };
+
+  window.onmousedown = function(){
+    snake.speedUp();
+  };
+
+  window.onmouseup = function(){
+    snake.speedDown();
+  };
+}
+
+binds();
 animate();
