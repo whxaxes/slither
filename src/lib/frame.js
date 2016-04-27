@@ -18,7 +18,7 @@ class Frame {
   /**
    * 跟踪某个对象
    */
-  trace(obj) {
+  track(obj) {
     this.translate(
       obj.x - this.x - this.width / 2,
       obj.y - this.y - this.height / 2
