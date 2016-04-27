@@ -4,7 +4,6 @@
  * main
  *
  */
-'use strict';
 
 import Stats from './third/stats.min';
 import Snake from './lib/snake';
@@ -17,7 +16,7 @@ const RAF = window.requestAnimationFrame
   || window.oRequestAnimationFrame
   || window.msRequestAnimationFrame
   || function(callback) {
-    window.setTimeout(callback, 1000 / 60)
+    window.setTimeout(callback, 1000 / 60);
   };
 
 const canvas = document.getElementById('cas');
@@ -65,7 +64,7 @@ function animate() {
     map.clear();
 
     // 让视窗跟随蛇的位置更改而更改
-    frame.trace(snake);
+    frame.track(snake);
 
     map.render();
 
