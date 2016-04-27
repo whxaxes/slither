@@ -33,6 +33,24 @@ class Base {
     this.createImage();
   }
 
+  // 设置基类的速度
+  set speed(val) {
+    const a = val - this._speed;
+    const b = Math.abs(this.vx) + Math.abs(this.vy);
+
+    this._speed = val;
+
+    if (!a) return;
+
+    // 更新速度
+    this.vx += a * this.vx / b;
+    this.vy += a * this.vy / b;
+  }
+
+  get speed() {
+    return this._speed;
+  }
+
   /**
    * 绘制时的x坐标, 要根据视窗来计算位置
    * @returns {number}
@@ -88,12 +106,7 @@ class Base {
    * @param x
    * @param y
    */
-  moveTo(x, y) {
-    if(Number.isNaN(x)) {
-      console.log(this);
-      throw new Error('ss');
-    }
-
+  velocity(x, y) {
     this.tox = x;
     this.toy = y;
 
@@ -149,7 +162,7 @@ class Body extends Base {
 
     if (this.tox == this.x && this.toy == this.y) {
       let naim = this.aims.shift();
-      super.moveTo(naim.x, naim.y);
+      this.velocity(naim.x, naim.y);
     }
   }
 
@@ -254,7 +267,7 @@ class Header extends Base {
       const aim = this.aims.shift();
 
       // 调用父类的moveTo, 让蛇头朝目标移动
-      super.moveTo(aim.x, aim.y);
+      this.velocity(aim.x, aim.y);
 
       // 根据新的目标位置, 更新toa
       this.turnTo();
@@ -323,9 +336,8 @@ class Header extends Base {
  */
 export default class Snake {
   constructor(options) {
-    options.speed = options.speed || 1.8;
+    options.speed = 2;
 
-    this.speed = options.speed;  // 蛇的速度
     this.length = options.length; // 蛇的长度
 
     // 创建脑袋
@@ -333,10 +345,9 @@ export default class Snake {
 
     // 创建身躯
     this.bodys = [];
-    let body_dis = options.r * 0.6;
+    this.body_dis = options.r * 0.6;
     for (let i = 0; i < this.length; i++) {
-      options.x -= body_dis;
-      options.r -= 0.2;
+      options.x -= this.body_dis;
 
       this.bodys.push(new Body(options));
     }
@@ -348,6 +359,19 @@ export default class Snake {
 
   get y() {
     return this.header.y;
+  }
+
+  // 加速
+  speedUp() {
+    this.speedRecord = this.header.speed;
+    this.header.speed = 3;
+    this.bodys.forEach(b => b.speed = this.header.speed);
+  }
+
+  // 减速
+  speedDown() {
+    this.header.speed = this.speedRecord;
+    this.bodys.forEach(b => b.speed = this.header.speed);
   }
 
   /**
@@ -364,8 +388,15 @@ export default class Snake {
       let front = this.bodys[i - 1] || this.header;
 
       body.moveTo(front.x, front.y);
-
       body.update();
+
+      //let dis_x = front.x - body.x;
+      //let dis_y = front.y - body.y;
+      //let dis = Math.hypot(dis_x, dis_y);
+      //let radio = (dis - this.body_dis) / dis;
+      //body.x += dis_x * radio;
+      //body.y += dis_y * radio;
+
       body.render();
     }
 
