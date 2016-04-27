@@ -60,7 +60,11 @@ class Map {
       ? (this.height - frame.y)
       : (begin_y + frame.h + this.block_h);
 
-    // 画方格
+    // 铺底色
+    this.ctx.fillStyle = '#999';
+    this.ctx.fillRect(begin_x, begin_y, end_x - begin_x, end_y - begin_y);
+
+    // 画方格砖
     this.ctx.strokeStyle = '#fff';
     for (let x = begin_x; x <= end_x; x += this.block_w) {
       for (let y = begin_y; y <= end_y; y += this.block_w) {
@@ -71,6 +75,59 @@ class Map {
         this.ctx.strokeRect(x, y, w, h);
       }
     }
+
+    // 画小地图
+    this.renderSmallMap();
+  }
+
+  /**
+   * 画小地图
+   */
+  renderSmallMap() {
+    // 小地图外壳, 圆圈
+    const margin = 30;
+    const smapr = 50;
+    const smapx = this.frame.w - smapr - margin;
+    const smapy = this.frame.h - smapr - margin;
+
+    // 地图在小地图中的位置和大小
+    const smrect = 50;
+    const smrectw = this.width > this.height ? smrect : (this.width * smrect / this.height);
+    const smrecth = this.width > this.height ? (this.height * smrect / this.width) : smrect;
+    const smrectx = smapx - smrectw/2;
+    const smrecty = smapy - smrecth/2;
+
+    // 相对比例
+    const radio = smrectw / this.width;
+
+    // 视窗在小地图中的位置和大小
+    const smframex = this.frame.x * radio + smrectx;
+    const smframey = this.frame.y * radio + smrecty;
+    const smframew = this.frame.w * radio;
+    const smframeh = this.frame.h * radio;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.8;
+
+    // 画个圈先
+    this.ctx.beginPath();
+    this.ctx.arc(smapx, smapy, smapr, 0, Math.PI * 2);
+    this.ctx.fillStyle = '#000';
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 画缩小版地图
+    this.ctx.fillStyle = '#999';
+    this.ctx.fillRect(smrectx, smrecty, smrectw, smrecth);
+
+    // 画视窗
+    this.ctx.strokeRect(smframex, smframey, smframew, smframeh);
+
+    // 画蛇蛇位置
+    this.ctx.fillStyle = '#f00';
+    this.ctx.fillRect(smframex + smframew / 2 - 1, smframey + smframeh / 2 - 1, 2, 2);
+
+    this.ctx.restore();
   }
 }
 
@@ -83,6 +140,16 @@ class Frame {
     this.y = options.y;
     this.max_x = options.max_x;
     this.max_y = options.max_y;
+  }
+
+  /**
+   * 跟踪某个对象
+   */
+  trace(obj) {
+    this.translate(
+      obj.x - this.x - this.w / 2,
+      obj.y - this.y - this.h / 2
+    )
   }
 
   /**
