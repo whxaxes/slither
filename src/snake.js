@@ -336,7 +336,7 @@ class Header extends Base {
  */
 export default class Snake {
   constructor(options) {
-    options.speed = 2;
+    options.speed = 3;
 
     this.length = options.length; // 蛇的长度
 
@@ -364,7 +364,7 @@ export default class Snake {
   // 加速
   speedUp() {
     this.speedRecord = this.header.speed;
-    this.header.speed = 3;
+    this.header.speed = 5;
     this.bodys.forEach(b => b.speed = this.header.speed);
   }
 
