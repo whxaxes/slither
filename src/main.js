@@ -42,8 +42,8 @@ map.init({
 const snake = new Snake({
   x: map.frame.x + map.frame.w / 2,
   y: map.frame.y + map.frame.h / 2,
-  r: 25,
-  length: 30,
+  r: 40,
+  length: 60,
   color: '#fff'
 });
 
