@@ -20,6 +20,3 @@ npm run server
 ```
 
 Open your chrome and visit `http://localhost:9999`
-
-## Tutorial
-[Step 1：先画条蛇](https://github.com/whxaxes/slither/issues/1)<br><br>
