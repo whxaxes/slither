@@ -107,19 +107,19 @@ class SnakeBase extends Base {
     }
 
     // 绘制移动方向, debug用
-    map.ctx.beginPath();
-    map.ctx.moveTo(
-      this.paintX - (this.width * 0.5 * this.vx / this.speed),
-      this.paintY - (this.width * 0.5 * this.vy / this.speed)
-    );
-    map.ctx.lineTo(this.paintX, this.paintY);
-    map.ctx.strokeStyle = '#000';
-    map.ctx.stroke();
+    //map.ctx.beginPath();
+    //map.ctx.moveTo(
+    //  this.paintX - (this.width * 0.5 * this.vx / this.speed),
+    //  this.paintY - (this.width * 0.5 * this.vy / this.speed)
+    //);
+    //map.ctx.lineTo(this.paintX, this.paintY);
+    //map.ctx.strokeStyle = '#000';
+    //map.ctx.stroke();
   }
 }
 
 // 蛇的身躯类
-class Body extends SnakeBase {
+class SnakeBody extends SnakeBase {
   constructor(options) {
     super(options);
 
@@ -175,7 +175,7 @@ class Body extends SnakeBase {
 }
 
 // 蛇头类
-class Header extends SnakeBase {
+class SnakeHeader extends SnakeBase {
   constructor(options) {
     super(options);
 
@@ -242,6 +242,27 @@ class Header extends SnakeBase {
     this.toAngle += rounds * Math.PI * 2;
   }
 
+  // 根据蛇头角度计算水平速度和垂直速度
+  velocity() {
+    const angle = this.angle % (Math.PI * 2);
+    const vx = Math.abs(this.speed * Math.sin(angle));
+    const vy = Math.abs(this.speed * Math.cos(angle));
+
+    if (angle < Math.PI / 2) {
+      this.vx = vx;
+      this.vy = -vy;
+    } else if (angle < Math.PI) {
+      this.vx = vx;
+      this.vy = vy;
+    } else if (angle < Math.PI * 3 / 2) {
+      this.vx = -vx;
+      this.vy = vy;
+    } else {
+      this.vx = -vx;
+      this.vy = -vy;
+    }
+  }
+
   /**
    * 增加蛇头的逐帧逻辑
    */
@@ -265,27 +286,6 @@ class Header extends SnakeBase {
       this.y = hhalf;
     } else if (this.y + hhalf > map.height) {
       this.y = map.height - hhalf;
-    }
-  }
-
-  // 根据蛇头角度计算水平速度和垂直速度
-  velocity() {
-    const angle = this.angle % (Math.PI * 2);
-    const vx = Math.abs(this.speed * Math.sin(angle));
-    const vy = Math.abs(this.speed * Math.cos(angle));
-
-    if (angle < Math.PI / 2) {
-      this.vx = vx;
-      this.vy = -vy;
-    } else if (angle < Math.PI) {
-      this.vx = vx;
-      this.vy = vy;
-    } else if (angle < Math.PI * 3 / 2) {
-      this.vx = -vx;
-      this.vy = vy;
-    } else {
-      this.vx = -vx;
-      this.vy = -vy;
     }
   }
 
@@ -313,12 +313,12 @@ export default class Snake {
     this.point = 0;
 
     // 创建脑袋
-    this.header = new Header(options);
+    this.header = new SnakeHeader(options);
 
     // 创建身躯, 给予各个身躯跟踪目标
     options.tracer = this.header;
     for (let i = 0; i < options.length; i++) {
-      this.bodys.push(options.tracer = new Body(options));
+      this.bodys.push(options.tracer = new SnakeBody(options));
     }
 
     this.binding();
@@ -390,7 +390,7 @@ export default class Snake {
 
     // 同时每吃一个食物, 都增加身躯
     const lastBody = this.bodys[this.bodys.length - 1];
-    this.bodys.push(new Body({
+    this.bodys.push(new SnakeBody({
       x: lastBody.x,
       y: lastBody.y,
       size: lastBody.width,
