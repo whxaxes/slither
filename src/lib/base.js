@@ -13,7 +13,6 @@
  *  - visible 元素是否在视窗内可见
  *
  */
-'use strict';
 
 import frame from './frame';
 
@@ -54,6 +53,6 @@ export default class Base {
     return (paintX + halfWidth > 0)
       && (paintX - halfWidth < frame.width)
       && (paintY + halfHeight > 0)
-      && (paintY - halfHeight < frame.height)
+      && (paintY - halfHeight < frame.height);
   }
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src/*.js ./src/lib/*.js",
     "server": "node server.js",
-    "release": "webpack && git status && git add -A && git commit -m update && git push"
+    "release": "webpack"
   },
   "keywords": [
     "game",

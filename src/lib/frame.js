@@ -4,7 +4,6 @@
  * 视窗类 由于视窗在整个游戏中只有一个, 所以做成单例
  *
  */
-'use strict';
 
 // 视窗类
 class Frame {
@@ -22,7 +21,7 @@ class Frame {
     this.translate(
       obj.x - this.x - this.width / 2,
       obj.y - this.y - this.height / 2
-    )
+    );
   }
 
   /**

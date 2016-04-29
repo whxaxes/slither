@@ -1,7 +1,6 @@
-const webpack = require("webpack");
-const webpackDevServer = require("webpack-dev-server");
-const http = require("http");
-const url = require('url');
+const webpack = require('webpack');
+const WebpackDevServer = require('webpack-dev-server');
+const http = require('http');
 const fs = require('fs');
 
 const port = 9999;
@@ -11,16 +10,16 @@ const config = require('./webpack.config.js');
 
 Object.keys(config.entry).forEach(key => {
   config.entry[key].unshift(
-    //"webpack/hot/only-dev-server",
+    // "webpack/hot/only-dev-server",
     `webpack-dev-server/client?http://localhost:${webpackPort}`
-  )
+  );
 });
 
 config.output.publicPath = `http://localhost:${webpackPort}/static/`;
 
 const compiler = webpack(config);
 
-const server = new webpackDevServer(compiler, {
+const server = new WebpackDevServer(compiler, {
   publicPath: config.output.publicPath,
   hot: true,
   historyApiFallback: true,
@@ -30,7 +29,7 @@ const server = new webpackDevServer(compiler, {
   }
 });
 
-http.createServer(function(req, res) {
+http.createServer((req, res) => {
   res.writeHead(200, {
     'content-type': 'text/html;charset=utf-8'
   });
@@ -40,7 +39,6 @@ http.createServer(function(req, res) {
       .toString()
       .replace(/\.\/dist\//g, `http://localhost:${webpackPort}/static/`)
   );
-
 }).listen(port);
 
 server.listen(webpackPort, 'localhost');

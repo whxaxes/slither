@@ -1,6 +1,5 @@
 const path = require('path');
 const webpack = require('webpack');
-const fs = require('fs');
 
 module.exports = {
   devtool: 'eval',
@@ -15,7 +14,7 @@ module.exports = {
   },
 
   plugins: [
-    //new webpack.HotModuleReplacementPlugin(),
+    // new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin()
   ],
 
