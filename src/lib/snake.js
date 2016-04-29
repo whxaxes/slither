@@ -294,7 +294,7 @@ class Header extends SnakeBase {
    */
   turnAround() {
     const angleDistance = this.toAngle - this.angle; // 与目标角度之间的角度差
-    const turnSpeed = 0.1; // 转头速度
+    const turnSpeed = 0.045; // 转头速度
 
     // 当转到目标角度, 重置蛇头角度
     if (Math.abs(angleDistance) <= turnSpeed) {
