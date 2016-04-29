@@ -64,9 +64,6 @@ class Map {
         this.ctx.strokeRect(x, y, w, h);
       }
     }
-
-    // 画小地图
-    this.renderSmallMap();
   }
 
   /**

@@ -8,6 +8,7 @@
 import Base from './base';
 import map from './map';
 
+const SPEED = 3;
 const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 
 // 蛇头和蛇身的基类
@@ -15,11 +16,8 @@ class SnakeBase extends Base {
   constructor(options) {
     super(options);
 
-    this.speed = options.speed;
-    this.aims = [];
-
     // 皮肤颜色
-    this.color_1 = options.color;
+    this.color = options.color;
     // 描边颜色
     this.color_2 = '#000';
 
@@ -27,37 +25,40 @@ class SnakeBase extends Base {
     this.vx = 0;
     this.vy = 0;
 
-    // 目标地址
-    this.tox = this.x;
-    this.toy = this.y;
-
     // 生成元素图片镜像
     this.createImage();
   }
 
   // 设置基类的速度
   set speed(val) {
-    const a = val - this._speed;
-    const b = Math.abs(this.vx) + Math.abs(this.vy);
-
     this._speed = val;
 
-    if (!a) return;
-
-    // 更新速度
-    this.vx += a * this.vx / b;
-    this.vy += a * this.vy / b;
+    // 重新计算水平垂直速度
+    this.velocity();
   }
 
   get speed() {
-    return this._speed;
+    return this._speed
+      ? this._speed
+      : (this._speed = this.tracer ? this.tracer.speed : SPEED);
+  }
+
+  /**
+   * 设置宽度和高度
+   * @param width
+   * @param height
+   */
+  setSize(width, height) {
+    this.width = width;
+    this.height = height || width;
+    this.createImage();
   }
 
   /**
    * 生成图片镜像
    */
   createImage() {
-    this.img = document.createElement('canvas');
+    this.img = this.img || document.createElement('canvas');
     this.img.width = this.width + 10;
     this.img.height = this.height + 10;
     this.imgctx = this.img.getContext('2d');
@@ -66,28 +67,11 @@ class SnakeBase extends Base {
     this.imgctx.save();
     this.imgctx.beginPath();
     this.imgctx.arc(this.img.width / 2, this.img.height / 2, this.width / 2, 0, Math.PI * 2);
-    this.imgctx.fillStyle = this.color_1;
+    this.imgctx.fillStyle = this.color;
     this.imgctx.strokeStyle = this.color_2;
     this.imgctx.stroke();
     this.imgctx.fill();
     this.imgctx.restore();
-  }
-
-  /**
-   * 给予目标点, 计算速度
-   * @param x
-   * @param y
-   */
-  velocity(x, y) {
-    this.tox = x;
-    this.toy = y;
-
-    const disX = this.tox - this.x;
-    const disY = this.toy - this.y;
-    const dis = Math.hypot(disX, disY);
-
-    this.vy = disY * (this.speed / dis) || 0;
-    this.vx = disX * (this.speed / dis) || 0;
   }
 
   /**
@@ -102,6 +86,8 @@ class SnakeBase extends Base {
    * 渲染镜像图片
    */
   render() {
+    this.update();
+
     // 如果该元素在视窗内不可见, 则不进行绘制
     if (!this.visible) return;
 
@@ -119,34 +105,72 @@ class SnakeBase extends Base {
         this.paintY - this.img.height / 2
       );
     }
+
+    // 绘制移动方向, debug用
+    map.ctx.beginPath();
+    map.ctx.moveTo(
+      this.paintX - (this.width * 0.5 * this.vx / this.speed),
+      this.paintY - (this.width * 0.5 * this.vy / this.speed)
+    );
+    map.ctx.lineTo(this.paintX, this.paintY);
+    map.ctx.strokeStyle = '#000';
+    map.ctx.stroke();
   }
 }
 
 // 蛇的身躯类
 class Body extends SnakeBase {
+  constructor(options) {
+    super(options);
 
-  // 身躯跟头部的运动轨迹不同, 身躯要走完当前目标后才进入下一个目标
-  moveTo(x, y) {
-    this.aims.push({ x, y });
+    // 设置跟踪者
+    this.tracer = options.tracer;
 
-    if (this.tox === this.x && this.toy === this.y) {
-      const aim = this.aims.shift();
-      this.velocity(aim.x, aim.y);
-    }
+    const aim = this.getAim();
+    this.x = this.tox = aim.x;
+    this.y = this.toy = aim.y;
+
+    // 目标地址
+    this.tox = this.x;
+    this.toy = this.y;
+  }
+
+  get distance() {
+    return this.tracer.width * 0.2;
+  }
+
+  // 计算蛇身的目标位置
+  getAim() {
+    return {
+      x: this.tracer.x - (this.distance * this.tracer.vx / this.tracer.speed),
+      y: this.tracer.y - (this.distance * this.tracer.vy / this.tracer.speed)
+    };
   }
 
   update() {
     super.update();
 
-    // 到达目的地设置x为目标x
-    if (Math.abs(this.tox - this.x) <= this.speed) {
-      this.x = this.tox;
-    }
+    const aim = this.getAim();
 
-    // 到达目的地设置y为目标y
-    if (Math.abs(this.toy - this.y) <= this.speed) {
-      this.y = this.toy;
-    }
+    this.velocity(aim.x, aim.y);
+  }
+
+
+  /**
+   * 根据目标点, 计算速度
+   * @param x
+   * @param y
+   */
+  velocity(x, y) {
+    this.tox = x || this.tox;
+    this.toy = y || this.toy;
+
+    const disX = this.tox - this.x;
+    const disY = this.toy - this.y;
+    const dis = Math.hypot(disX, disY);
+
+    this.vx = this.speed * disX / dis || 0;
+    this.vy = this.speed * disY / dis || 0;
   }
 }
 
@@ -155,9 +179,8 @@ class Header extends SnakeBase {
   constructor(options) {
     super(options);
 
-    this.vx = this.speed;
     this.angle = BASE_ANGLE + Math.PI / 2;
-    this.toa = this.angle;
+    this.toAngle = this.angle;
   }
 
   /**
@@ -196,58 +219,36 @@ class Header extends SnakeBase {
   }
 
   /**
-   * 这里不进行真正的移动, 而是计算移动位置与目前位置的补间位置, 目的是为了让蛇的转弯不那么突兀
+   * 转向某个角度
    */
-  moveTo(x, y) {
-    if (!this.aims.length) {
-      return this.aims.push({ x, y });
+  directTo(angle) {
+    // 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
+    const oldAngle = Math.abs(this.toAngle % (Math.PI * 2));
+
+    // 转了多少圈
+    let rounds = ~~(this.toAngle / (Math.PI * 2));
+
+    this.toAngle = angle;
+
+    if (oldAngle >= Math.PI * 3 / 2 && this.toAngle <= Math.PI / 2) {
+      // 角度从第四象限左划至第一象限, 增加圈数
+      rounds++;
+    } else if (oldAngle <= Math.PI / 2 && this.toAngle >= Math.PI * 3 / 2) {
+      // 角度从第一象限划至第四象限, 减少圈数
+      rounds--;
     }
 
-    const olderAim = this.aims[this.aims.length - 1];
-    const disX = x - olderAim.x;
-    const disY = y - olderAim.y;
-    const dis = Math.hypot(disX, disY);
-    const min = 20;
-
-    if (dis > min) {
-      const part = ~~(dis / min);
-      for (let i = 1; i <= part; i++) {
-        // 记录的目标点不超过20个
-        if (this.aims.length > 30) {
-          this.aims.shift();
-        }
-
-        this.aims.push({
-          x: olderAim.x + disX * i / part,
-          y: olderAim.y + disY * i / part
-        });
-      }
-    } else {
-      this.aims[this.aims.length - 1] = { x, y };
-    }
+    // 计算真实要转到的角度
+    this.toAngle += rounds * Math.PI * 2;
   }
 
   /**
    * 增加蛇头的逐帧逻辑
    */
   update() {
-    const time = new Date();
-
-    // 每隔一段时间获取一次目标位置集合中的数据, 进行移动
-    if ((!this.time || time - this.time > 30) && this.aims.length) {
-      const aim = this.aims.shift();
-
-      // 计算蛇头速度, 让蛇头朝目标移动
-      this.velocity(aim.x, aim.y);
-
-      // 根据新的目标位置, 更新toa
-      this.turnTo();
-
-      this.time = time;
-    }
-
-    // 让蛇转头
     this.turnAround();
+
+    this.velocity();
 
     super.update();
 
@@ -267,63 +268,60 @@ class Header extends SnakeBase {
     }
   }
 
-  /**
-   * 根据蛇的目的地, 调整蛇头的目标角度
-   */
-  turnTo() {
-    const olda = Math.abs(this.toa % (Math.PI * 2));// 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
-    let rounds = ~~(this.toa / (Math.PI * 2));      // 转了多少圈
-    this.toa = Math.atan(this.vy / this.vx) + (this.vx < 0 ? Math.PI : 0) + Math.PI / 2; // 目标角度
+  // 根据蛇头角度计算水平速度和垂直速度
+  velocity() {
+    const angle = this.angle % (Math.PI * 2);
+    const vx = Math.abs(this.speed * Math.sin(angle));
+    const vy = Math.abs(this.speed * Math.cos(angle));
 
-    if (olda >= Math.PI * 3 / 2 && this.toa <= Math.PI / 2) {
-      // 角度从第一象限左划至第四象限, 增加圈数
-      rounds++;
-    } else if (olda <= Math.PI / 2 && this.toa >= Math.PI * 3 / 2) {
-      // 角度从第四象限划至第一象限, 减少圈数
-      rounds--;
+    if (angle < Math.PI / 2) {
+      this.vx = vx;
+      this.vy = -vy;
+    } else if (angle < Math.PI) {
+      this.vx = vx;
+      this.vy = vy;
+    } else if (angle < Math.PI * 3 / 2) {
+      this.vx = -vx;
+      this.vy = vy;
+    } else {
+      this.vx = -vx;
+      this.vy = -vy;
     }
-
-    // 计算真实要转到的角度
-    this.toa += rounds * Math.PI * 2;
   }
 
   /**
-   * 让蛇头转角更加平滑, 渐增转头
+   * 蛇头转头
    */
   turnAround() {
-    const angleDistance = this.toa - this.angle;
+    const angleDistance = this.toAngle - this.angle; // 与目标角度之间的角度差
+    const turnSpeed = 0.1; // 转头速度
 
-    if (angleDistance) {
-      this.angle += angleDistance * 0.2;
-
-      // 当转到目标角度, 重置蛇头角度
-      if (Math.abs(angleDistance) <= 0.01) {
-        this.toa = this.angle = BASE_ANGLE + this.toa % (Math.PI * 2);
-      }
+    // 当转到目标角度, 重置蛇头角度
+    if (Math.abs(angleDistance) <= turnSpeed) {
+      this.toAngle = this.angle = BASE_ANGLE + this.toAngle % (Math.PI * 2);
+    } else {
+      this.angle += Math.sign(angleDistance) * turnSpeed;
     }
   }
 }
 
-/**
- * 蛇类
- */
+
+// 蛇类
 export default class Snake {
   constructor(options) {
-    options.speed = 3;
-
-    this.length = options.length; // 蛇的长度
+    this.bodys = [];
+    this.point = 0;
 
     // 创建脑袋
     this.header = new Header(options);
 
-    // 创建身躯
-    this.bodys = [];
-    this.body_dis = this.header.width * 0.3;
-    for (let i = 0; i < this.length; i++) {
-      options.x -= this.body_dis;
-
-      this.bodys.push(new Body(options));
+    // 创建身躯, 给予各个身躯跟踪目标
+    options.tracer = this.header;
+    for (let i = 0; i < options.length; i++) {
+      this.bodys.push(options.tracer = new Body(options));
     }
+
+    this.binding();
   }
 
   get x() {
@@ -334,50 +332,79 @@ export default class Snake {
     return this.header.y;
   }
 
-  // 加速
-  speedUp() {
-    this.speedRecord = this.header.speed;
-    this.header.speed = 5;
-    this.bodys.forEach(b => {
-      b.speed = this.header.speed;
-    });
-  }
+  /**
+   * 蛇与鼠标的交互事件
+   */
+  binding() {
+    const header = this.header;
+    const bodys = this.bodys;
 
-  // 减速
-  speedDown() {
-    this.header.speed = this.speedRecord;
-    this.bodys.forEach(b => {
-      b.speed = this.header.speed;
+    // 蛇头跟随鼠标的移动而变更移动方向
+    window.addEventListener('mousemove', (e = window.event) => {
+      const x = e.clientX - header.paintX;
+      const y = header.paintY - e.clientY;
+      let angle = Math.atan(Math.abs(x / y));
+
+      // 计算角度, 角度值为 0-360
+      if (x > 0 && y < 0) {
+        angle = Math.PI - angle;
+      } else if (x < 0 && y < 0) {
+        angle = Math.PI + angle;
+      } else if (x < 0 && y > 0) {
+        angle = Math.PI * 2 - angle;
+      }
+
+      header.directTo(angle);
+    });
+
+    // 鼠标按下让蛇加速
+    window.addEventListener('mousedown', () => {
+      header.speed = 5;
+      bodys.forEach(body => {
+        body.speed = 5;
+      });
+    });
+
+    // 鼠标抬起停止加速
+    window.addEventListener('mouseup', () => {
+      header.speed = SPEED;
+      bodys.forEach(body => {
+        body.speed = SPEED;
+      });
     });
   }
 
   /**
-   * 蛇的移动就是头部的移动
+   * 吃掉食物
+   * @param food
    */
-  moveTo(x, y) {
-    this.header.moveTo(x, y);
+  eat(food) {
+    this.point += food.point;
+
+    // 增加分数引起虫子体积增大
+    const newSize = this.header.width + food.point / 50;
+    this.header.setSize(newSize);
+    this.bodys.forEach(body => {
+      body.setSize(newSize);
+    });
+
+    // 同时每吃一个食物, 都增加身躯
+    const lastBody = this.bodys[this.bodys.length - 1];
+    this.bodys.push(new Body({
+      x: lastBody.x,
+      y: lastBody.y,
+      size: lastBody.width,
+      color: lastBody.color,
+      tracer: lastBody
+    }));
   }
 
+  // 渲染蛇头蛇身
   render() {
-    // 蛇的身躯沿着蛇头的运动轨迹运动
     for (let i = this.bodys.length - 1; i >= 0; i--) {
-      const body = this.bodys[i];
-      const front = this.bodys[i - 1] || this.header;
-
-      body.moveTo(front.x, front.y);
-      body.update();
-
-      // let disX = front.x - body.x;
-      // let disY = front.y - body.y;
-      // let dis = Math.hypot(disX, disY);
-      // let radio = (dis - this.body_dis) / dis;
-      // body.x += disX * radio;
-      // body.y += disY * radio;
-
-      body.render();
+      this.bodys[i].render();
     }
 
-    this.header.update();
     this.header.render();
   }
 }
