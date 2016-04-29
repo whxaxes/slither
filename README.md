@@ -20,3 +20,7 @@ npm run server
 ```
 
 Open your chrome and visit `http://localhost:9999`
+
+## Tutorial
+
+- [仿造slither.io第一步：先画条蛇](https://github.com/whxaxes/blog/issues/1)
