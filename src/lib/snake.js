@@ -138,9 +138,11 @@ class SnakeBody extends SnakeBase {
 
   update() {
     if (this.tracerDis >= this.distance) {
+      const tracer = this.tracer;
+
       // 计算位置的偏移量
-      this.tox = this.savex + ((this.tracerDis - this.distance) * this.tracer.vx / this.tracer.speed);
-      this.toy = this.savey + ((this.tracerDis - this.distance) * this.tracer.vy / this.tracer.speed);
+      this.tox = this.savex + ((this.tracerDis - this.distance) * tracer.vx / tracer.speed);
+      this.toy = this.savey + ((this.tracerDis - this.distance) * tracer.vy / tracer.speed);
 
       this.velocity(this.tox, this.toy);
 
