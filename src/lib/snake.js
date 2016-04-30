@@ -22,7 +22,7 @@ class SnakeBase extends Base {
     this.color_2 = '#000';
 
     // 垂直和水平速度
-    this.vx = 0;
+    this.vx = SPEED;
     this.vy = 0;
 
     // 生成元素图片镜像
@@ -126,35 +126,45 @@ class SnakeBody extends SnakeBase {
     // 设置跟踪者
     this.tracer = options.tracer;
 
-    const aim = this.getAim();
-    this.x = this.tox = aim.x;
-    this.y = this.toy = aim.y;
+    this.tracerDis = this.distance;
 
-    // 目标地址
-    this.tox = this.x;
-    this.toy = this.y;
+    this.savex = this.tox = this.tracer.x - this.distance;
+    this.savey = this.toy = this.tracer.y;
   }
 
   get distance() {
     return this.tracer.width * 0.2;
   }
 
-  // 计算蛇身的目标位置
-  getAim() {
-    return {
-      x: this.tracer.x - (this.distance * this.tracer.vx / this.tracer.speed),
-      y: this.tracer.y - (this.distance * this.tracer.vy / this.tracer.speed)
-    };
-  }
-
   update() {
-    super.update();
+    if (this.tracerDis >= this.distance) {
+      // 计算位置的偏移量
+      this.tox = this.savex + ((this.tracerDis - this.distance) * this.tracer.vx / this.tracer.speed);
+      this.toy = this.savey + ((this.tracerDis - this.distance) * this.tracer.vy / this.tracer.speed);
 
-    const aim = this.getAim();
+      this.velocity(this.tox, this.toy);
 
-    this.velocity(aim.x, aim.y);
+      this.tracerDis = 0;
+
+      // 保存tracer位置
+      this.savex = this.tracer.x;
+      this.savey = this.tracer.y;
+    }
+
+    this.tracerDis += this.tracer.speed;
+
+    if (Math.abs(this.tox - this.x) <= Math.abs(this.vx)) {
+      this.x = this.tox;
+    } else {
+      this.x += this.vx;
+    }
+
+    if (Math.abs(this.toy - this.y) <= Math.abs(this.vy)) {
+      this.y = this.toy;
+    } else {
+      this.y += this.vy;
+    }
   }
-
 
   /**
    * 根据目标点, 计算速度
