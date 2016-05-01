@@ -351,13 +351,15 @@ export default class Snake {
     const self = this;
 
     if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
-      window.addEventListener('touchmove', e =>
-        self.moveTo(e.touches[0].pageX, e.touches[0].pageY)
-      );
+      window.addEventListener('touchmove', e => {
+        e.preventDefault();
+        self.moveTo(e.touches[0].pageX, e.touches[0].pageY);
+      });
 
-      window.addEventListener('touchstart', e =>
-        self.moveTo(e.touches[0].pageX, e.touches[0].pageY)
-      );
+      window.addEventListener('touchstart', e => {
+        e.preventDefault();
+        self.moveTo(e.touches[0].pageX, e.touches[0].pageY);
+      });
     } else {
       // 蛇头跟随鼠标的移动而变更移动方向
       window.addEventListener('mousemove', (e = window.event) =>
