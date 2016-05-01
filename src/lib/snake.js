@@ -348,42 +348,70 @@ export default class Snake {
    * 蛇与鼠标的交互事件
    */
   binding() {
-    const header = this.header;
-    const bodys = this.bodys;
+    const self = this;
 
-    // 蛇头跟随鼠标的移动而变更移动方向
-    window.addEventListener('mousemove', (e = window.event) => {
-      const x = e.clientX - header.paintX;
-      const y = header.paintY - e.clientY;
-      let angle = Math.atan(Math.abs(x / y));
+    if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+      window.addEventListener('touchmove', e =>
+        self.moveTo(e.touches[0].pageX, e.touches[0].pageY)
+      );
 
-      // 计算角度, 角度值为 0-360
-      if (x > 0 && y < 0) {
-        angle = Math.PI - angle;
-      } else if (x < 0 && y < 0) {
-        angle = Math.PI + angle;
-      } else if (x < 0 && y > 0) {
-        angle = Math.PI * 2 - angle;
-      }
+      window.addEventListener('touchstart', e =>
+        self.moveTo(e.touches[0].pageX, e.touches[0].pageY)
+      );
+    } else {
+      // 蛇头跟随鼠标的移动而变更移动方向
+      window.addEventListener('mousemove', (e = window.event) =>
+        self.moveTo(e.clientX, e.clientY)
+      );
 
-      header.directTo(angle);
+      // 鼠标按下让蛇加速
+      window.addEventListener('mousedown', self.speedUp.bind(self));
+
+      // 鼠标抬起停止加速
+      window.addEventListener('mouseup', self.speedDown.bind(self));
+    }
+  }
+
+  /**
+   * 加速
+   */
+  speedUp() {
+    this.header.speed = 5;
+    this.bodys.forEach(body => {
+      body.speed = 5;
     });
+  }
 
-    // 鼠标按下让蛇加速
-    window.addEventListener('mousedown', () => {
-      header.speed = 5;
-      bodys.forEach(body => {
-        body.speed = 5;
-      });
+  /**
+   * 恢复原速度
+   */
+  speedDown() {
+    this.header.speed = SPEED;
+    this.bodys.forEach(body => {
+      body.speed = SPEED;
     });
+  }
 
-    // 鼠标抬起停止加速
-    window.addEventListener('mouseup', () => {
-      header.speed = SPEED;
-      bodys.forEach(body => {
-        body.speed = SPEED;
-      });
-    });
+  /**
+   * 根据传入坐标, 获取坐标点相对于蛇的角度
+   * @param x
+   * @param y
+   */
+  moveTo(nx, ny) {
+    const x = nx - this.header.paintX;
+    const y = this.header.paintY - ny;
+    let angle = Math.atan(Math.abs(x / y));
+
+    // 计算角度, 角度值为 0-360
+    if (x > 0 && y < 0) {
+      angle = Math.PI - angle;
+    } else if (x < 0 && y < 0) {
+      angle = Math.PI + angle;
+    } else if (x < 0 && y > 0) {
+      angle = Math.PI * 2 - angle;
+    }
+
+    this.header.directTo(angle);
   }
 
   /**
