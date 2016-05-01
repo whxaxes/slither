@@ -3,7 +3,7 @@
   "rules": {
     "space-before-function-paren": [2, "never"],
     "comma-dangle": 0,
-    "strict": [2, global],
+    "strict": [2, "global"],
     "eol-last": 0,
     "func-names": 0,
     "no-underscore-dangle": [2, {"allowAfterThis": true}],

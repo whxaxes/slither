@@ -107,14 +107,14 @@ class SnakeBase extends Base {
     }
 
     // 绘制移动方向, debug用
-    //map.ctx.beginPath();
-    //map.ctx.moveTo(
-    //  this.paintX - (this.width * 0.5 * this.vx / this.speed),
-    //  this.paintY - (this.width * 0.5 * this.vy / this.speed)
-    //);
-    //map.ctx.lineTo(this.paintX, this.paintY);
-    //map.ctx.strokeStyle = '#000';
-    //map.ctx.stroke();
+//    map.ctx.beginPath();
+//    map.ctx.moveTo(
+//      this.paintX - (this.width * 0.5 * this.vx / this.speed),
+//      this.paintY - (this.width * 0.5 * this.vy / this.speed)
+//    );
+//    map.ctx.lineTo(this.paintX, this.paintY);
+//    map.ctx.strokeStyle = '#000';
+//    map.ctx.stroke();
   }
 }
 
