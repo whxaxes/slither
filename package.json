@@ -13,6 +13,7 @@
     "slither"
   ],
   "dependencies": {
+    "eventemitter3": "^1.2.0",
     "stats.js": "^0.16.0"
   },
   "author": "wanghx",

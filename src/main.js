@@ -120,6 +120,8 @@ function animate() {
 
     map.renderSmallMap();
 
+    map.update();
+
     time = ntime;
   }
 
