@@ -61,8 +61,8 @@ function createFood(num) {
     const size = ~~(point / 3);
 
     foods.push(new Food({
-      x: ~~(Math.random() * (map.width + size) - 2 * size),
-      y: ~~(Math.random() * (map.height + size) - 2 * size),
+      x: ~~(Math.random() * (map.width - 2 * size) + size),
+      y: ~~(Math.random() * (map.height - 2 * size) + size),
       size, point
     }));
   }

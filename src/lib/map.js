@@ -39,7 +39,7 @@ class Map extends EventEmitter {
    * @param value
    */
   set scale(value) {
-    if (value >= 1.8 || value < 1 || this._scale === value) {
+    if (value >= 1.6 || value < 1 || this._scale === value) {
       return;
     }
 
