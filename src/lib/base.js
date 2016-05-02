@@ -14,6 +14,7 @@
  *
  */
 
+import map from './map';
 import frame from './frame';
 
 export default class Base {
@@ -29,7 +30,7 @@ export default class Base {
    * @returns {number}
    */
   get paintX() {
-    return this.x - frame.x;
+    return map.relative(this.x) - frame.x;
   }
 
   /**
@@ -37,7 +38,23 @@ export default class Base {
    * @returns {number}
    */
   get paintY() {
-    return this.y - frame.y;
+    return map.relative(this.y) - frame.y;
+  }
+
+  /**
+   * 绘制宽度
+   * @returns {*}
+   */
+  get paintWidth() {
+    return map.relative(this.width);
+  }
+
+  /**
+   * 绘制高度
+   * @returns {*}
+   */
+  get paintHeight() {
+    return map.relative(this.height);
   }
 
   /**
@@ -47,8 +64,8 @@ export default class Base {
   get visible() {
     const paintX = this.paintX;
     const paintY = this.paintY;
-    const halfWidth = this.width / 2;
-    const halfHeight = this.height / 2;
+    const halfWidth = this.paintWidth / 2;
+    const halfHeight = this.paintHeight / 2;
 
     return (paintX + halfWidth > 0)
       && (paintX - halfWidth < frame.width)

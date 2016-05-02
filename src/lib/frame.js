@@ -5,13 +5,22 @@
  *
  */
 
+import map from './map';
+
 // 视窗类
 class Frame {
   init(options) {
+    const self = this;
+
     this.x = options.x;
     this.y = options.y;
     this.width = options.width;
     this.height = options.height;
+
+    map.on('scale_changed', () => {
+      self.x = map.relative(self.x);
+      self.y = map.relative(self.y);
+    });
   }
 
   /**
@@ -19,8 +28,8 @@ class Frame {
    */
   track(obj) {
     this.translate(
-      obj.x - this.x - this.width / 2,
-      obj.y - this.y - this.height / 2
+      map.relative(obj.x) - this.x - this.width / 2,
+      map.relative(obj.y) - this.y - this.height / 2
     );
   }
 

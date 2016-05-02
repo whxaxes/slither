@@ -6,13 +6,16 @@
  */
 
 import frame from './frame';
+import EventEmitter from 'eventemitter3';
 
 // 地图类
-class Map {
+class Map extends EventEmitter {
   constructor() {
+    super();
+
     // 背景块的大小
-    this.block_w = 150;
-    this.block_h = 150;
+    this.blockWidth = 150;
+    this.blockHeight = 150;
   }
 
   /**
@@ -26,6 +29,40 @@ class Map {
     // 地图大小
     this.width = options.width;
     this.height = options.height;
+
+    // 地图比例
+    this.toScale = this.scale = options.scale || 1;
+  }
+
+  /**
+   * 设置缩放比例
+   * @param value
+   */
+  set scale(value) {
+    if (value >= 1.8 || value < 1) {
+      return;
+    }
+
+    const oscale = this._scale;
+    this._scale = value;
+
+    this.paintBlockWidth = this.relative(this.blockWidth);
+    this.paintBlockHeight = this.relative(this.blockHeight);
+    this.paintWidth = this.relative(this.width);
+    this.paintHeight = this.relative(this.height);
+
+    this.emit('scale_changed', {
+      old: oscale,
+      news: value
+    });
+  }
+
+  get scale() {
+    return this._scale;
+  }
+
+  setScale(scale) {
+    this.toScale = scale;
   }
 
   /**
@@ -36,17 +73,35 @@ class Map {
   }
 
   /**
+   * 相对于地图scale的值
+   * @param val
+   * @returns {*}
+   */
+  relative(val) {
+    return val + val * (1 - this.scale);
+  }
+
+  /**
+   * 对地图本身的更新都在此处进行
+   */
+  update() {
+    if (this.scale !== this.toScale) {
+      this.scale = this.toScale;
+    }
+  }
+
+  /**
    * 渲染地图
    */
   render() {
-    const beginX = (frame.x < 0) ? -frame.x : (-frame.x % this.block_w);
-    const beginY = (frame.y < 0) ? -frame.y : (-frame.y % this.block_h);
-    const endX = (frame.x + frame.width > this.width)
-      ? (this.width - frame.x)
-      : (beginX + frame.width + this.block_w);
-    const endY = (frame.y + frame.height > this.height)
-      ? (this.height - frame.y)
-      : (beginY + frame.height + this.block_h);
+    const beginX = (frame.x < 0) ? -frame.x : (-frame.x % this.paintBlockWidth);
+    const beginY = (frame.y < 0) ? -frame.y : (-frame.y % this.paintBlockHeight);
+    const endX = (frame.x + frame.width > this.paintWidth)
+      ? (this.paintWidth - frame.x)
+      : (beginX + frame.width + this.paintBlockWidth);
+    const endY = (frame.y + frame.height > this.paintHeight)
+      ? (this.paintHeight - frame.y)
+      : (beginY + frame.height + this.paintBlockHeight);
 
     // 铺底色
     this.ctx.fillStyle = '#999';
@@ -54,12 +109,12 @@ class Map {
 
     // 画方格砖
     this.ctx.strokeStyle = '#fff';
-    for (let x = beginX; x <= endX; x += this.block_w) {
-      for (let y = beginY; y <= endY; y += this.block_w) {
+    for (let x = beginX; x <= endX; x += this.paintBlockWidth) {
+      for (let y = beginY; y <= endY; y += this.paintBlockWidth) {
         const cx = endX - x;
         const cy = endY - y;
-        const w = cx < this.block_w ? cx : this.block_w;
-        const h = cy < this.block_h ? cy : this.block_h;
+        const w = cx < this.paintBlockWidth ? cx : this.paintBlockWidth;
+        const h = cy < this.paintBlockHeight ? cy : this.paintBlockHeight;
 
         this.ctx.strokeRect(x, y, w, h);
       }
@@ -78,13 +133,13 @@ class Map {
 
     // 地图在小地图中的位置和大小
     const smrect = 50;
-    const smrectw = this.width > this.height ? smrect : (this.width * smrect / this.height);
-    const smrecth = this.width > this.height ? (this.height * smrect / this.width) : smrect;
+    const smrectw = this.paintWidth > this.paintHeight ? smrect : (this.paintWidth * smrect / this.paintHeight);
+    const smrecth = this.paintWidth > this.paintHeight ? (this.paintHeight * smrect / this.paintWidth) : smrect;
     const smrectx = smapx - smrectw / 2;
     const smrecty = smapy - smrecth / 2;
 
     // 相对比例
-    const radio = smrectw / this.width;
+    const radio = smrectw / this.paintWidth;
 
     // 视窗在小地图中的位置和大小
     const smframex = frame.x * radio + smrectx;

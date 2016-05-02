@@ -13,18 +13,17 @@ export default class Food extends Base {
     super(options);
 
     this.point = options.point;
-    this.r = this.width / 2;        // 食物的半径, 发光半径
-    this.cr = this.width / 2;       // 食物实体半径
+    this.lightSize = this.width / 2;        // 食物的半径, 发光半径
     this.lightDirection = true;     // 发光动画方向
   }
 
   update() {
     const lightSpeed = 1;
 
-    this.r += this.lightDirection ? lightSpeed : -lightSpeed;
+    this.lightSize += this.lightDirection ? lightSpeed : -lightSpeed;
 
     // 当发光圈到达一定值再缩小
-    if (this.r > this.cr * 2 || this.r < this.cr) {
+    if (this.lightSize > this.width || this.lightSize < this.width / 2) {
       this.lightDirection = !this.lightDirection;
     }
   }
@@ -41,13 +40,18 @@ export default class Food extends Base {
     // 绘制光圈
     map.ctx.globalAlpha = 0.2;
     map.ctx.beginPath();
-    map.ctx.arc(this.paintX, this.paintY, this.r, 0, Math.PI * 2);
+    map.ctx.arc(
+      this.paintX,
+      this.paintY,
+      this.lightSize * this.paintWidth / this.width,
+      0, Math.PI * 2
+    );
     map.ctx.fill();
 
     // 绘制实体
     map.ctx.globalAlpha = 1;
     map.ctx.beginPath();
-    map.ctx.arc(this.paintX, this.paintY, this.cr, 0, Math.PI * 2);
+    map.ctx.arc(this.paintX, this.paintY, this.paintWidth / 2, 0, Math.PI * 2);
     map.ctx.fill();
   }
 }

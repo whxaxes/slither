@@ -5,7 +5,7 @@
  *
  */
 
-import Stats from './third/stats.min';
+import Stats from 'stats.js';
 import Snake from './lib/snake';
 import Food from './lib/food';
 import frame from './lib/frame';
@@ -26,11 +26,7 @@ canvas.height = window.innerHeight;
 
 // fps状态
 const stats = new Stats();
-stats.setMode(0);
-stats.domElement.style.position = 'absolute';
-stats.domElement.style.right = '0px';
-stats.domElement.style.top = '0px';
-document.body.appendChild(stats.domElement);
+document.body.appendChild(stats.dom);
 
 // 初始化地图对象
 map.init({
@@ -99,6 +95,8 @@ let time = new Date();
 function animate() {
   const ntime = new Date();
 
+  stats.begin();
+
   if (ntime - time > timeout) {
     map.clear();
 
@@ -122,10 +120,12 @@ function animate() {
 
     map.renderSmallMap();
 
+    map.update();
+
     time = ntime;
   }
 
-  stats.update();
+  stats.end();
 
   raf(animate);
 }
