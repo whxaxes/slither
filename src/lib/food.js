@@ -29,11 +29,11 @@ export default class Food extends Base {
   }
 
   render() {
-    this.update();
-
     if (!this.visible) {
       return;
     }
+
+    this.update();
 
     map.ctx.fillStyle = '#fff';
 
