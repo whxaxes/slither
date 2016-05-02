@@ -12,7 +12,9 @@
     "game",
     "slither"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "stats.js": "^0.16.0"
+  },
   "author": "wanghx",
   "license": "MIT",
   "devDependencies": {
