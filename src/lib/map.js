@@ -31,7 +31,7 @@ class Map extends EventEmitter {
     this.height = options.height;
 
     // 地图比例
-    this.toScale = this.scale = options.scale || 1;
+    this.scale = options.scale || 1;
   }
 
   /**
@@ -39,11 +39,10 @@ class Map extends EventEmitter {
    * @param value
    */
   set scale(value) {
-    if (value >= 1.8 || value < 1) {
+    if (value >= 1.8 || value < 1 || this._scale === value) {
       return;
     }
 
-    const oscale = this._scale;
     this._scale = value;
 
     this.paintBlockWidth = this.relative(this.blockWidth);
@@ -51,10 +50,7 @@ class Map extends EventEmitter {
     this.paintWidth = this.relative(this.width);
     this.paintHeight = this.relative(this.height);
 
-    this.emit('scale_changed', {
-      old: oscale,
-      news: value
-    });
+    this.emit('scale_changed');
   }
 
   get scale() {
@@ -85,7 +81,7 @@ class Map extends EventEmitter {
    * 对地图本身的更新都在此处进行
    */
   update() {
-    if (this.scale !== this.toScale) {
+    if (this.toScale && this.scale !== this.toScale) {
       this.scale = this.toScale;
     }
   }
@@ -94,6 +90,7 @@ class Map extends EventEmitter {
    * 渲染地图
    */
   render() {
+    this.ctx.save();
     const beginX = (frame.x < 0) ? -frame.x : (-frame.x % this.paintBlockWidth);
     const beginY = (frame.y < 0) ? -frame.y : (-frame.y % this.paintBlockHeight);
     const endX = (frame.x + frame.width > this.paintWidth)
@@ -108,6 +105,7 @@ class Map extends EventEmitter {
     this.ctx.fillRect(beginX, beginY, endX - beginX, endY - beginY);
 
     // 画方格砖
+    this.ctx.lineWidth = 0.5;
     this.ctx.strokeStyle = '#fff';
     for (let x = beginX; x <= endX; x += this.paintBlockWidth) {
       for (let y = beginY; y <= endY; y += this.paintBlockWidth) {
@@ -119,6 +117,8 @@ class Map extends EventEmitter {
         this.ctx.strokeRect(x, y, w, h);
       }
     }
+
+    this.ctx.restore();
   }
 
   /**
@@ -133,8 +133,12 @@ class Map extends EventEmitter {
 
     // 地图在小地图中的位置和大小
     const smrect = 50;
-    const smrectw = this.paintWidth > this.paintHeight ? smrect : (this.paintWidth * smrect / this.paintHeight);
-    const smrecth = this.paintWidth > this.paintHeight ? (this.paintHeight * smrect / this.paintWidth) : smrect;
+    const smrectw = this.paintWidth > this.paintHeight
+      ? smrect
+      : (this.paintWidth * smrect / this.paintHeight);
+    const smrecth = this.paintWidth > this.paintHeight
+      ? (this.paintHeight * smrect / this.paintWidth)
+      : smrect;
     const smrectx = smapx - smrectw / 2;
     const smrecty = smapy - smrecth / 2;
 
@@ -162,13 +166,13 @@ class Map extends EventEmitter {
     this.ctx.fillRect(smrectx, smrecty, smrectw, smrecth);
 
     // 画视窗
-    this.ctx.strokeRect(smframex, smframey, smframew, smframeh);
-
-    // 画蛇蛇位置
-    this.ctx.fillStyle = '#f00';
-    this.ctx.fillRect(smframex + smframew / 2 - 1, smframey + smframeh / 2 - 1, 2, 2);
+//    this.ctx.strokeRect(smframex, smframey, smframew, smframeh);
 
     this.ctx.restore();
+
+    // 画蛇蛇位置
+    this.ctx.fillStyle = '#fff';
+    this.ctx.fillRect(smframex + smframew / 2 - 2, smframey + smframeh / 2 - 2, 4, 4);
   }
 }
 

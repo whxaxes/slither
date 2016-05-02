@@ -4,13 +4,15 @@
  * base    地图上的元素基础类, 默认为圆
  *
  * 基础属性:
- *  - x       元素的中心点x坐标
- *  - y       元素的中心店y坐标
- *  - width   元素宽度
- *  - height  元素高度
- *  - paintX  元素的绘制坐标,
- *  - paintY  元素的绘制坐标
- *  - visible 元素是否在视窗内可见
+ *  - x             元素的中心点x坐标
+ *  - y             元素的中心店y坐标
+ *  - width         元素宽度
+ *  - height        元素高度
+ *  - paintX        元素的绘制坐标
+ *  - paintY        元素的绘制坐标
+ *  - paintWidth    元素的绘制宽度
+ *  - paintHeight   元素的绘制高度
+ *  - visible       元素是否在视窗内可见
  *
  */
 

@@ -118,14 +118,14 @@ class SnakeBase extends Base {
     }
 
     // 绘制移动方向, debug用
-    //    map.ctx.beginPath();
-    //    map.ctx.moveTo(
-    //      this.paintX - (this.paintWidth * 0.5 * this.vx / this.speed),
-    //      this.paintY - (this.paintWidth * 0.5 * this.vy / this.speed)
-    //    );
-    //    map.ctx.lineTo(this.paintX, this.paintY);
-    //    map.ctx.strokeStyle = '#000';
-    //    map.ctx.stroke();
+//    map.ctx.beginPath();
+//    map.ctx.moveTo(
+//      this.paintX - (this.paintWidth * 0.5 * this.vx / this.speed),
+//      this.paintY - (this.paintWidth * 0.5 * this.vy / this.speed)
+//    );
+//    map.ctx.lineTo(this.paintX, this.paintY);
+//    map.ctx.strokeStyle = '#000';
+//    map.ctx.stroke();
   }
 }
 
@@ -432,27 +432,32 @@ export default class Snake {
    * @param food
    */
   eat(food) {
+    this.foodNum = this.foodNum || 0;
     this.point += food.point;
+    this.foodNum++;
 
     // 增加分数引起虫子体积增大
-    const newSize = this.header.width + food.point / 50;
+    const added = food.point / 100;
+    const newSize = this.header.width + added;
     this.header.setSize(newSize);
     this.bodys.forEach(body => {
       body.setSize(newSize);
     });
 
     // 调整地图缩放比例
-    map.setScale(map.scale + food.point / (200 * this.header.width));
+    map.setScale(map.scale + added / (this.header.width * 3));
 
-    // 同时每吃一个食物, 都增加身躯
-    const lastBody = this.bodys[this.bodys.length - 1];
-    this.bodys.push(new SnakeBody({
-      x: lastBody.x,
-      y: lastBody.y,
-      size: lastBody.width,
-      color: lastBody.color,
-      tracer: lastBody
-    }));
+    // 每吃两个个食物, 都增加一截身躯
+    if (this.foodNum % 2 === 0) {
+      const lastBody = this.bodys[this.bodys.length - 1];
+      this.bodys.push(new SnakeBody({
+        x: lastBody.x,
+        y: lastBody.y,
+        size: lastBody.width,
+        color: lastBody.color,
+        tracer: lastBody
+      }));
+    }
   }
 
   // 渲染蛇头蛇身

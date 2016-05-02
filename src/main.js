@@ -31,8 +31,8 @@ document.body.appendChild(stats.dom);
 // 初始化地图对象
 map.init({
   canvas,
-  width: 5000,
-  height: 5000
+  width: 10000,
+  height: 10000
 });
 
 // 初始化视窗对象
@@ -53,7 +53,7 @@ const snake = new Snake({
 });
 
 // 食物生成方法
-const foodsNum = 100;
+const foodsNum = 1000;
 const foods = [];
 function createFood(num) {
   for (let i = 0; i < num; i++) {
