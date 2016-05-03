@@ -8,14 +8,20 @@ const webpackPort = port + 1;
 
 const config = require('./webpack.config.js');
 
+config.devtool = 'eval';
+
 Object.keys(config.entry).forEach(key => {
   config.entry[key].unshift(
-    // "webpack/hot/only-dev-server",
+    'webpack/hot/only-dev-server',
     `webpack-dev-server/client?http://localhost:${webpackPort}`
   );
 });
 
 config.output.publicPath = `http://localhost:${webpackPort}/static/`;
+config.plugins.unshift(
+  new webpack.HotModuleReplacementPlugin(),
+  new webpack.NoErrorsPlugin()
+);
 
 const compiler = webpack(config);
 
@@ -41,4 +47,4 @@ http.createServer((req, res) => {
   );
 }).listen(port);
 
-server.listen(webpackPort, 'localhost');
+server.listen(webpackPort);

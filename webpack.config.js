@@ -2,8 +2,6 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-  devtool: 'eval',
-
   entry: {
     main: ['./src/main']
   },
@@ -13,10 +11,7 @@ module.exports = {
     filename: '[name].bundle.js'
   },
 
-  plugins: [
-    // new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
-  ],
+  plugins: [],
 
   module: {
     loaders: [

@@ -15,24 +15,13 @@ const BASE_ANGLE = Math.PI * 200; // 用于保证蛇的角度一直都是正数
 class SnakeBase extends Base {
   constructor(options) {
     super(options);
-    const self = this;
-
-    // 皮肤颜色
-    this.color = options.color;
-    // 描边颜色
-    this.color_2 = '#000';
 
     // 垂直和水平速度
     this.vx = SPEED;
     this.vy = 0;
 
-    // 生成元素图片镜像
-    this.createImage();
-
-    // 监听地图scale更改事件, 重绘镜像
-    map.on('scale_changed', () => {
-      self.createImage();
-    });
+    // 添加贴图
+    this.img = options.img;
   }
 
   // 设置基类的速度
@@ -57,32 +46,6 @@ class SnakeBase extends Base {
   setSize(width, height) {
     this.width = width;
     this.height = height || width;
-    this.createImage();
-  }
-
-  /**
-   * 生成图片镜像
-   */
-  createImage() {
-    this.img = this.img || document.createElement('canvas');
-    this.img.width = this.paintWidth + 10;
-    this.img.height = this.paintHeight + 10;
-    this.imgctx = this.img.getContext('2d');
-
-    this.imgctx.lineWidth = 2;
-    this.imgctx.save();
-    this.imgctx.beginPath();
-    this.imgctx.arc(
-      this.img.width / 2,
-      this.img.height / 2,
-      this.paintWidth / 2,
-      0, Math.PI * 2
-    );
-    this.imgctx.fillStyle = this.color;
-    this.imgctx.strokeStyle = this.color_2;
-    this.imgctx.stroke();
-    this.imgctx.fill();
-    this.imgctx.restore();
   }
 
   /**
@@ -107,25 +70,33 @@ class SnakeBase extends Base {
       map.ctx.save();
       map.ctx.translate(this.paintX, this.paintY);
       map.ctx.rotate(this.angle - BASE_ANGLE - Math.PI / 2);
-      map.ctx.drawImage(this.img, -this.img.width / 2, -this.img.height / 2);
+      map.ctx.drawImage(
+        this.img,
+        -this.paintWidth / 2,
+        -this.paintHeight / 2,
+        this.paintWidth,
+        this.paintHeight
+      );
       map.ctx.restore();
     } else {
       map.ctx.drawImage(
         this.img,
-        this.paintX - this.img.width / 2,
-        this.paintY - this.img.height / 2
+        this.paintX - this.paintWidth / 2,
+        this.paintY - this.paintHeight / 2,
+        this.paintWidth,
+        this.paintHeight
       );
     }
 
     // 绘制移动方向, debug用
-//    map.ctx.beginPath();
-//    map.ctx.moveTo(
-//      this.paintX - (this.paintWidth * 0.5 * this.vx / this.speed),
-//      this.paintY - (this.paintWidth * 0.5 * this.vy / this.speed)
-//    );
-//    map.ctx.lineTo(this.paintX, this.paintY);
-//    map.ctx.strokeStyle = '#000';
-//    map.ctx.stroke();
+    //    map.ctx.beginPath();
+    //    map.ctx.moveTo(
+    //      this.paintX - (this.paintWidth * 0.5 * this.vx / this.speed),
+    //      this.paintY - (this.paintWidth * 0.5 * this.vy / this.speed)
+    //    );
+    //    map.ctx.lineTo(this.paintX, this.paintY);
+    //    map.ctx.strokeStyle = '#000';
+    //    map.ctx.stroke();
   }
 }
 
@@ -204,41 +175,6 @@ class SnakeHeader extends SnakeBase {
 
     this.angle = BASE_ANGLE + Math.PI / 2;
     this.toAngle = this.angle;
-  }
-
-  /**
-   * 添加画眼睛的功能
-   */
-  createImage() {
-    super.createImage();
-    const self = this;
-    const eyeRadius = this.paintWidth * 0.2;
-
-    function drawEye(eyeX, eyeY) {
-      self.imgctx.beginPath();
-      self.imgctx.fillStyle = '#fff';
-      self.imgctx.strokeStyle = self.color_2;
-      self.imgctx.arc(eyeX, eyeY, eyeRadius, 0, Math.PI * 2);
-      self.imgctx.fill();
-      self.imgctx.stroke();
-
-      self.imgctx.beginPath();
-      self.imgctx.fillStyle = '#000';
-      self.imgctx.arc(eyeX + eyeRadius / 2, eyeY, eyeRadius / 4, 0, Math.PI * 2);
-      self.imgctx.fill();
-    }
-
-    // 画左眼
-    drawEye(
-      this.img.width / 2 + this.paintWidth / 2 - eyeRadius,
-      this.img.height / 2 - this.paintHeight / 2 + eyeRadius
-    );
-
-    // 画右眼
-    drawEye(
-      this.img.width / 2 + this.paintWidth / 2 - eyeRadius,
-      this.img.height / 2 + this.paintHeight / 2 - eyeRadius
-    );
   }
 
   /**
@@ -328,23 +264,26 @@ class SnakeHeader extends SnakeBase {
   }
 }
 
-
 // 蛇类
 export default class Snake {
   constructor(options) {
     this.bodys = [];
     this.point = 0;
 
-    // 创建脑袋
-    this.header = new SnakeHeader(options);
+    // 皮肤颜色
+    this.color = options.color || '#fff';
 
-    // 创建身躯, 给予各个身躯跟踪目标
-    options.tracer = this.header;
-    for (let i = 0; i < options.length; i++) {
-      this.bodys.push(options.tracer = new SnakeBody(options));
-    }
+    // 描边颜色
+    this.color_2 = '#000';
 
-    this.binding();
+    // 蛇头图层
+    this.headerImage = document.createElement('canvas');
+
+    // 蛇身图层
+    this.bodyImage = document.createElement('canvas');
+
+    // 初始化
+    this.init(options);
   }
 
   get x() {
@@ -356,11 +295,127 @@ export default class Snake {
   }
 
   /**
+   * 初始化蛇实例
+   * @param options
+   */
+  init(options) {
+    // 创建脑袋
+    this.header = new SnakeHeader(Object.assign(options, {
+      img: this.headerImage
+    }));
+
+    // 创建身躯, 给予各个身躯跟踪目标
+    for (let i = 0; i < options.length; i++) {
+      this.bodys.push(new SnakeBody(Object.assign(options, {
+        tracer: this.bodys[i - 1] || this.header,
+        img: this.bodyImage
+      })));
+    }
+
+    // 更新图层
+    this.updateImage();
+
+    // 事件绑定
+    this.binding();
+  }
+
+  /**
+   * 更新图层
+   */
+  updateImage() {
+    // 更新蛇身的图层
+    this.updateBodyImage();
+
+    // 更新蛇身的图层
+    this.updateHeaderImage();
+  }
+
+  /**
+   * 更新蛇身贴图
+   */
+  updateBodyImage() {
+    const img = this.bodyImage;
+    const body = this.bodys[0];
+    const imgctx = img.getContext('2d');
+
+    if (!body) return;
+
+    this.drawMain(imgctx, img, body.paintWidth, body.paintHeight);
+  }
+
+  /**
+   * 更新蛇头贴图
+   */
+  updateHeaderImage() {
+    const img = this.headerImage;
+    const header = this.header;
+    const imgctx = img.getContext('2d');
+    const eyeRadius = header.paintWidth * 0.2;
+
+    this.drawMain(imgctx, img, header.paintWidth, header.paintHeight);
+
+    // 画左眼
+    this.drawEye(
+      imgctx,
+      img.width / 2 + header.paintWidth / 2 - eyeRadius,
+      img.height / 2 - header.paintHeight / 2 + eyeRadius,
+      eyeRadius
+    );
+
+    // 画右眼
+    this.drawEye(
+      imgctx,
+      img.width / 2 + header.paintWidth / 2 - eyeRadius,
+      img.height / 2 + header.paintHeight / 2 - eyeRadius,
+      eyeRadius
+    );
+  }
+
+  /**
+   * 绘制主体
+   */
+  drawMain(ctx, img, width, height) {
+    img.width = width + 4;
+    img.height = height + 4;
+
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(img.width / 2, img.height / 2, width / 2, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.strokeStyle = this.color_2;
+    ctx.stroke();
+    ctx.fill();
+  }
+
+  /**
+   * 绘制眼睛的封装
+   */
+  drawEye(ctx, eyeX, eyeY, eyeRadius) {
+    ctx.beginPath();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = this.color_2;
+    ctx.arc(eyeX, eyeY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle = '#000';
+    ctx.arc(eyeX + eyeRadius / 2, eyeY, eyeRadius / 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /**
    * 蛇与鼠标的交互事件
    */
   binding() {
     const self = this;
 
+    // 监听地图缩放变化, 更新贴图大小
+    map.on('scale_changed', () => {
+      self.updateImage();
+    });
+
+    // 鼠标/手指 跟蛇运动的交互事件绑定
     if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
       window.addEventListener('touchmove', e => {
         e.preventDefault();
@@ -407,8 +462,8 @@ export default class Snake {
 
   /**
    * 根据传入坐标, 获取坐标点相对于蛇的角度
-   * @param x
-   * @param y
+   * @param nx
+   * @param ny
    */
   moveTo(nx, ny) {
     const x = nx - this.header.paintX;
@@ -438,13 +493,10 @@ export default class Snake {
 
     // 增加分数引起虫子体积增大
     const added = food.point / 100;
-    const newSize = this.header.width + added;
-    this.header.setSize(newSize);
-    this.bodys.forEach(body => {
-      body.setSize(newSize);
-    });
+    this.header.setSize(this.header.width + added);
+    this.bodys.forEach(body => { body.setSize(body.width + added); });
 
-    // 调整地图缩放比例
+    // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
     map.setScale(map.scale + added / (this.header.width * 3));
 
     // 每吃两个个食物, 都增加一截身躯
@@ -455,7 +507,8 @@ export default class Snake {
         y: lastBody.y,
         size: lastBody.width,
         color: lastBody.color,
-        tracer: lastBody
+        tracer: lastBody,
+        img: this.bodyImage
       }));
     }
   }
