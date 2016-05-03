@@ -16,8 +16,8 @@
  *
  */
 
-import map from './map';
-import frame from './frame';
+import map from '../map';
+import frame from '../frame';
 
 export default class Base {
   constructor(options) {

@@ -7,17 +7,10 @@
 
 import frame from './frame';
 import EventEmitter from 'eventemitter3';
+import { MAP_RECT_WIDTH, MAP_RECT_HEIGHT } from './constant';
 
 // 地图类
 class Map extends EventEmitter {
-  constructor() {
-    super();
-
-    // 背景块的大小
-    this.blockWidth = 150;
-    this.blockHeight = 150;
-  }
-
   /**
    * 初始化map对象
    * @param options
@@ -45,8 +38,8 @@ class Map extends EventEmitter {
 
     this._scale = value;
 
-    this.paintBlockWidth = this.relative(this.blockWidth);
-    this.paintBlockHeight = this.relative(this.blockHeight);
+    this.paintBlockWidth = this.relative(MAP_RECT_WIDTH);
+    this.paintBlockHeight = this.relative(MAP_RECT_HEIGHT);
     this.paintWidth = this.relative(this.width);
     this.paintHeight = this.relative(this.height);
 
@@ -108,7 +101,7 @@ class Map extends EventEmitter {
     this.ctx.lineWidth = 0.5;
     this.ctx.strokeStyle = '#fff';
     for (let x = beginX; x <= endX; x += this.paintBlockWidth) {
-      for (let y = beginY; y <= endY; y += this.paintBlockWidth) {
+      for (let y = beginY; y <= endY; y += this.paintBlockHeight) {
         const cx = endX - x;
         const cy = endY - y;
         const w = cx < this.paintBlockWidth ? cx : this.paintBlockWidth;

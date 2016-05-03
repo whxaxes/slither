@@ -5,8 +5,8 @@
  *
  */
 
-import Base from './base';
-import map from './map';
+import Base from './Base';
+import map from '../map';
 
 export default class Food extends Base {
   constructor(options) {

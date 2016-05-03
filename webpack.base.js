@@ -1,9 +1,15 @@
+/**
+ * Created by wanghx on 5/3/16.
+ *
+ * webpack.base.js
+ *
+ */
+
 const path = require('path');
-const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    main: ['./src/main']
+    main: './src/main'
   },
 
   output: {
@@ -18,10 +24,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel',
-        include: path.join(__dirname, 'src'),
-        query: {
-          presets: ['es2015']
-        }
+        include: path.join(__dirname, 'src')
       }
     ]
   },

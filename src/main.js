@@ -6,10 +6,10 @@
  */
 
 import Stats from 'stats.js';
-import Snake from './lib/snake';
-import Food from './lib/food';
-import frame from './lib/frame';
-import map from './lib/map';
+import Snake from './elements/Snake';
+import Food from './elements/Food';
+import frame from './frame';
+import map from './map';
 
 const raf = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame

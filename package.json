@@ -4,9 +4,11 @@
   "description": "slither game",
   "main": "main.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint ./src/*.js ./src/lib/*.js",
-    "server": "node server.js",
-    "release": "webpack"
+    "build": "npm run lint && npm run release",
+    "lint": "./node_modules/.bin/eslint ./src/**/*.js",
+    "dev": "node server.js",
+    "release": "webpack --config ./webpack.dist.js --progress",
+    "test": "./node_modules/.bin/mocha ./test/*.test.js --compilers js:babel-core/register --recursive --reporter spec"
   },
   "keywords": [
     "game",
@@ -27,6 +29,7 @@
     "eslint-plugin-import": "^1.6.0",
     "eslint-plugin-jsx-a11y": "^1.0.3",
     "eslint-plugin-react": "^5.0.1",
+    "mocha": "^2.4.5",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.8.2"
   }

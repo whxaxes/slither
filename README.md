@@ -8,18 +8,18 @@ Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
 [http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
-## Installation 
+## Installation
 
-step 1
 ```
-npm install
-```
-step 2
-```
-npm run server
+npm install && npm run dev
 ```
 
-Open your chrome and visit `http://localhost:9999`
+Open your chrome and visit [http://localhost:9999](http://localhost:9999)
+
+## Build
+```
+npm run build
+```
 
 ## Tutorial
 
