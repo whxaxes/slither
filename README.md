@@ -4,7 +4,7 @@ Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
 
 ## Preview
 
-> It's not completed yet，and it will be continually updated
+> Server side is unsupported yet, it is still a single game now!!! 
 
 [http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
 
