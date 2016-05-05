@@ -32,7 +32,7 @@ document.body.appendChild(stats.dom);
 map.init({
   canvas,
   width: 10000,
-  height: 10000
+  height: 10000,
 });
 
 // 初始化视窗对象
@@ -48,8 +48,7 @@ const snake = new Snake({
   x: frame.x + frame.width / 2,
   y: frame.y + frame.height / 2,
   size: 40,
-  length: 10,
-  color: '#fff'
+  length: 10
 });
 
 // 食物生成方法
@@ -65,6 +64,24 @@ function createFood(num) {
       y: ~~(Math.random() * (map.height - 2 * size) + size),
       size, point
     }));
+  }
+}
+
+// 生成机器蛇
+const robotsNum = 0;
+const robots = [];
+function createRobots(num) {
+  for (let i = 0; i < num; i++) {
+    const size = 40;
+
+    robots.push(new Snake({
+      x: ~~(Math.random() * (map.width - 2 * size) + size),
+      y: ~~(Math.random() * (map.height - 2 * size) + size),
+      size,
+      length: 10,
+      fillColor: '#ccc',
+      robot: true
+    }))
   }
 }
 
@@ -89,6 +106,9 @@ function collision(dom, dom2, isRect) {
 // 创建一些食物
 createFood(foodsNum);
 
+// 创建一些机器人
+createRobots(robotsNum);
+
 // 动画逻辑
 const timeout = 0;
 let time = new Date();
@@ -110,11 +130,38 @@ function animate() {
       food.render();
 
       if (food.visible && collision(snake.header, food)) {
+        const added = snake.eat(food);
         foods.splice(foods.indexOf(food), 1);
-        snake.eat(food);
         createFood(1);
+
+        // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
+        map.setScale(map.scale + added / (snake.header.width * 3));
+
+        return;
       }
+
+//      for (let i = 0; i < robots.length; i++) {
+//        const robot = robots[i];
+//        if(collision(robot.header, food)) {
+//          foods.splice(foods.indexOf(food), 1);
+//          robot.eat(food);
+//          createFood(1);
+//
+//          break;
+//        }
+//      }
     });
+
+    for (let i = 0; i < robots.length; i++) {
+      const robot = robots[i];
+      if (!robot.time || !robot.nextTime || (ntime - robot.time) > robot.nextTime) {
+        robot.time = new Date();
+        robot.nextTime = Math.random() * 5000;
+        robot.header.directTo(Math.random() * Math.PI * 2);
+      }
+
+      robot.render();
+    }
 
     snake.render();
 
