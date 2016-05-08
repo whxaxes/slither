@@ -1,6 +1,6 @@
 # slither
 
-Imitate `slither.io`, just for fun ~o(〃'▽'〃)o
+`slither.io` imitation, just for fun ~o(〃'▽'〃)o
 
 ## Preview
 
