@@ -27,10 +27,8 @@ class Frame {
    * 跟踪某个对象
    */
   track(obj) {
-    this.translate(
-      map.relative(obj.x) - this.x - this.width / 2,
-      map.relative(obj.y) - this.y - this.height / 2
-    );
+    this.x = map.relative(obj.x) - this.width / 2;
+    this.y = map.relative(obj.y) - this.height / 2;
   }
 
   /**

@@ -30,6 +30,10 @@ const server = new WebpackDevServer(webpack({
   hot: true,
   historyApiFallback: true,
   port: devport,
+  stats: {
+    colors: true,
+    chunks: false,
+  },
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000

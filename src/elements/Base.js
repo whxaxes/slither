@@ -21,8 +21,8 @@ import frame from '../frame';
 
 export default class Base {
   constructor(options) {
-    this.x = options.x;
-    this.y = options.y;
+    this.x = +options.x;
+    this.y = +options.y;
     this.width = options.size || options.width;
     this.height = options.size || options.height;
   }
