@@ -5,11 +5,13 @@
  *
  */
 
+const webpack = require('webpack');
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: {
-    main: './src/main'
+    main: ['./src/main']
   },
 
   output: {
@@ -17,19 +19,26 @@ module.exports = {
     filename: '[name].bundle.js'
   },
 
-  plugins: [],
+  plugins: [
+    new webpack.NoErrorsPlugin(),
+    new HtmlWebpackPlugin({
+      inject: true,
+      template: 'src/index.html',
+    })
+  ],
 
   module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        loader: 'babel',
-        include: path.join(__dirname, 'src')
-      }
-    ]
+    loaders: [{
+      test: /\.js$/,
+      loader: 'babel',
+      include: path.join(__dirname, 'src')
+    }]
   },
 
   resolve: {
-    extensions: ['', '.js']
+    extensions: ['', '.js'],
+    alias: {
+      'config': path.resolve('./config')
+    }
   }
 };

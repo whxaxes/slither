@@ -6,13 +6,11 @@
  */
 
 const webpack = require('webpack');
+const merge = require('webpack-merge');
 const config = require('./webpack.base');
 
-module.exports = {
-  entry: config.entry,
-  output: config.output,
-
-  plugins: config.plugins.concat([
+module.exports = merge(require('./webpack.base'), {
+  plugins: [
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         dead_code: true,
@@ -21,8 +19,5 @@ module.exports = {
         warnings: false
       }
     })
-  ]),
-
-  module: config.module,
-  resolve: config.resolve
-};
+  ]
+});

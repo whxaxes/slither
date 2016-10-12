@@ -1,9 +1,10 @@
 'use strict';
-const WebSocketServer = require('ws').Server;
-const wss = new WebSocketServer({ port: 9997 });
-const MAP_WID = 10000;
-const MAP_HEI = 10000;
+const WebSocket = require('ws');
+const WebSocketServer = WebSocket.Server;
+const config = require('./config');
+const wss = new WebSocketServer({ port: config.socketPort });
 
+let idKey = 0;
 const freeFoodsKeys = [];
 const foods = new Map();
 const foodsNum = 1000;
@@ -14,8 +15,8 @@ function createFood(num) {
     const point = size * 3;
 
     foods.set(i, {
-      x: ~~(Math.random() * (MAP_WID - 2 * size) + size),
-      y: ~~(Math.random() * (MAP_HEI - 2 * size) + size),
+      x: ~~(Math.random() * (config.MAP_WIDTH - 2 * size) + size),
+      y: ~~(Math.random() * (config.MAP_HEIGHT - 2 * size) + size),
       size,
       point
     });
@@ -25,21 +26,39 @@ function createFood(num) {
 wss.on('connection', ws => {
   console.log('socket connected');
 
-  ws.on('message', data => {
-    const chunks = data.split(':');
-    const symbol = chunks[0];
-    const value = chunks[1];
-    const pos = value.split(',');
+  ws.on('message', buf => {
+    let obj;
+    if (buf instanceof Buffer) {
+      obj = decode(buf);
+    } else {
+      obj = JSON.parse(buf);
+    }
 
-    ws.frameWidth = pos[0];
-    ws.frameHeight = pos[1];
-    ws.snakeX = ~~(Math.random() * (MAP_WID - ws.frameWidth) + ws.frameWidth / 2);
-    ws.snakeY = ~~(Math.random() * (MAP_HEI - ws.frameHeight) + ws.frameHeight / 2);
+    switch (obj.opt) {
+      case config.CMD_INIT:
+        ws.frameWidth = obj.data[0];
+        ws.frameHeight = obj.data[1];
+        ws.playerId = idKey++;
+        ws.snakeX = ~~(Math.random() * (config.MAP_WIDTH - ws.frameWidth) + ws.frameWidth / 2);
+        ws.snakeY = ~~(Math.random() * (config.MAP_HEIGHT - ws.frameHeight) + ws.frameHeight / 2);
+        ws.name = obj.name;
 
-    switch (symbol) {
-      case 'init':
-        console.log('client inited');
-        ws.send(`init:${ws.snakeX},${ws.snakeY}`);
+        // 响应初始化
+        ws.send(encode({
+          opt: config.CMD_INIT_ACK,
+          data: [ws.playerId, ws.snakeX, ws.snakeY]
+        }));
+        break;
+
+      case config.CMD_SYNC_MAIN_COORD:
+        ws.snakeX = obj.data[0];
+        ws.snakeY = obj.data[1];
+        ws.bodys = obj.data.slice(2);
+
+        wss.broadcast(encode({
+          opt: config.CMD_SYNC_OTHER_COORD,
+          data: [ws.playerId].concat(obj.data)
+        }));
         break;
 
       default:
@@ -47,3 +66,33 @@ wss.on('connection', ws => {
     }
   });
 });
+
+wss.broadcast = (data) => {
+  wss.clients.forEach((client) => {
+    client.send(data);
+  });
+};
+
+const OPT_LEN = 1; // 操作符长度
+const VALUE_LEN = 2; // 值长度
+
+function encode(data) {
+  // 操作符1个字节，单个数值两个字节
+  const bufLen = OPT_LEN + data.data.length * VALUE_LEN;
+  const buf = new Buffer(bufLen);
+  buf.writeUInt8(data.opt);
+  data.data.forEach((value, i) => {
+    buf.writeUInt16BE(value, i * VALUE_LEN + OPT_LEN);
+  });
+  return buf;
+}
+
+function decode(buf) {
+  const data = {};
+  data.opt = buf.readUInt8();
+  data.data = [];
+  for (let i = OPT_LEN, max = buf.length - OPT_LEN; i < max; i += VALUE_LEN) {
+    data.data.push(buf.readUInt16BE(i));
+  }
+  return data;
+}

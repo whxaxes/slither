@@ -7,7 +7,7 @@
 
 import Base from './Base';
 import map from '../map';
-import { SPEED, BASE_ANGLE } from '../constant';
+import { SPEED, BASE_ANGLE } from 'config';
 
 // 蛇头和蛇身的基类
 export default class SnakeBase extends Base {
@@ -58,8 +58,6 @@ export default class SnakeBase extends Base {
    * 渲染镜像图片
    */
   render() {
-    this.update();
-
     // 如果该元素在视窗内不可见, 则不进行绘制
     if (!this.visible) return;
 

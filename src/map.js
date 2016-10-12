@@ -7,7 +7,7 @@
 
 import frame from './frame';
 import EventEmitter from 'eventemitter3';
-import { MAP_RECT_WIDTH, MAP_RECT_HEIGHT } from './constant';
+import { MAP_RECT_WIDTH, MAP_RECT_HEIGHT } from 'config';
 
 // 地图类
 class Map extends EventEmitter {

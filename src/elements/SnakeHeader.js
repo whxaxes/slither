@@ -6,7 +6,7 @@
  */
 
 import SnakeBase from './SnakeBase';
-import { BASE_ANGLE } from '../constant';
+import { BASE_ANGLE } from 'config';
 
 // 蛇头类
 export default class SnakeHeader extends SnakeBase {

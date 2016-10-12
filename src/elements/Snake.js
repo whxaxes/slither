@@ -8,7 +8,7 @@
 import map from '../map';
 import SnakeBody from './SnakeBody';
 import SnakeHeader from './SnakeHeader';
-import { SPEED } from '../constant';
+import { SPEED } from 'config';
 
 // 蛇的图片管理模块, 提供可复用的蛇镜像
 const snakeImgStore = {
@@ -22,9 +22,9 @@ const snakeImgStore = {
       return this.store[key];
     }
 
-    this.store[key] = (kind === 0)
-      ? this.createBodyImg.apply(this, args)
-      : this.createHeaderImg.apply(this, args);
+    this.store[key] = (kind === 0) ?
+      this.createBodyImg.apply(this, args) :
+      this.createHeaderImg.apply(this, args);
 
     return this.store[key];
   },
@@ -95,9 +95,6 @@ export default class Snake {
     this.bodys = [];
     this.point = 0;
 
-    // 是否为机器人
-    this.robot = options.robot;
-
     // 蛇身图层
     this.bodyImage = snakeImgStore.getImage(0, imgWidth, imgHeight, fillColor, strokeColor);
 
@@ -133,42 +130,6 @@ export default class Snake {
         img: this.bodyImage
       })));
     }
-
-    if (!this.robot) {
-      // 事件绑定
-      this.binding();
-    }
-  }
-
-  /**
-   * 蛇与鼠标的交互事件
-   */
-  binding() {
-    const self = this;
-
-    // 鼠标/手指 跟蛇运动的交互事件绑定
-    if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
-      window.addEventListener('touchmove', e => {
-        e.preventDefault();
-        self.moveTo(e.touches[0].pageX, e.touches[0].pageY);
-      });
-
-      window.addEventListener('touchstart', e => {
-        e.preventDefault();
-        self.moveTo(e.touches[0].pageX, e.touches[0].pageY);
-      });
-    } else {
-      // 蛇头跟随鼠标的移动而变更移动方向
-      window.addEventListener('mousemove', (e = window.event) =>
-        self.moveTo(e.clientX, e.clientY)
-      );
-
-      // 鼠标按下让蛇加速
-      window.addEventListener('mousedown', self.speedUp.bind(self));
-
-      // 鼠标抬起停止加速
-      window.addEventListener('mouseup', self.speedDown.bind(self));
-    }
   }
 
   /**
@@ -197,8 +158,8 @@ export default class Snake {
    * @param ny
    */
   moveTo(nx, ny) {
-    const x = nx - this.header.paintX;
-    const y = this.header.paintY - ny;
+    const x = nx - this.header.x;
+    const y = this.header.y - ny;
     let angle = Math.atan(Math.abs(x / y));
 
     // 计算角度, 角度值为 0-360
@@ -211,6 +172,17 @@ export default class Snake {
     }
 
     this.header.directTo(angle);
+  }
+
+  /**
+   * 获取所有坐标
+   */
+  getAllCoords() {
+    const coords = [this.header.x, this.header.y];
+    this.bodys.forEach(body => {
+      coords.push(body.x, body.y);
+    });
+    return coords;
   }
 
   /**
@@ -243,7 +215,7 @@ export default class Snake {
   }
 
   // 渲染蛇头蛇身
-  render() {
+  update(notRender) {
     // 不让蛇走出边界, 也就是蛇头
     const whalf = this.header.width / 2;
     if (this.header.x < whalf) {
@@ -261,9 +233,17 @@ export default class Snake {
 
     // 渲染蛇头蛇身
     for (let i = this.bodys.length - 1; i >= 0; i--) {
-      this.bodys[i].render();
+      this.bodys[i].update();
+
+      if (!notRender) {
+        this.bodys[i].render();
+      }
     }
 
-    this.header.render();
+    this.header.update();
+
+    if (!notRender) {
+      this.header.render();
+    }
   }
 }
