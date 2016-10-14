@@ -6,7 +6,7 @@
 
 > Server side is unsupported yet, it is still a single game now!!! 
 
-[http://whxaxes.github.io/slither/](http://whxaxes.github.io/slither/)
+[http://whxaxes.github.io/slither/dist](http://whxaxes.github.io/slither/dist/)
 
 ## Installation
 
