@@ -1,7 +1,7 @@
 import { GameMap } from './GameMap';
 import { SPEED } from '../../common/config';
 
-export interface LookerInterface {
+export interface ObserverInterface {
   gamemap: GameMap;
   x: number;
   y: number;
@@ -9,7 +9,7 @@ export interface LookerInterface {
   update(): void;
 }
 
-export class Looker implements LookerInterface {
+export class Observer implements ObserverInterface {
   private vx: number = 0;
   private vy: number = 0;
 
@@ -20,7 +20,7 @@ export class Looker implements LookerInterface {
   ) { }
 
   /**
-   * 停止
+   * stop moving
    */
   stop(): void {
     this.vx = 0;

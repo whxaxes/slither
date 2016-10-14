@@ -67,11 +67,10 @@ wss.broadcast = (data) => {
   });
 };
 
-const OPT_LEN = 1; // 操作符长度
-const VALUE_LEN = 2; // 值长度
+const OPT_LEN = 1; // operation code bite length
+const VALUE_LEN = 2; // data bite length
 
 function encode(data) {
-  // 操作符1个字节，单个数值两个字节
   const bufLen = OPT_LEN + data.data.length * VALUE_LEN;
   const buf = new Buffer(bufLen);
   buf.writeUInt8(data.opt);

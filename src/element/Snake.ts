@@ -1,9 +1,9 @@
-import { BaseOptions } from './Base';
+import { SnakeBaseOptions } from './SnakeBase';
 import { SnakeBody } from './SnakeBody';
 import { SnakeHeader } from './SnakeHeader';
 import { SPEED } from '../../common/config';
 import { GameMap } from '../framework/GameMap';
-import { LookerInterface } from '../framework/Looker';
+import { ObserverInterface } from '../framework/Observer';
 
 const snakeImageStore = {
   store: {},
@@ -27,10 +27,12 @@ const snakeImageStore = {
   createBodyImg(width: number, height: number, fillColor: string, strokeColor: string): HTMLCanvasElement {
     const img: HTMLCanvasElement = document.createElement('canvas');
     const ctx: CanvasRenderingContext2D = img.getContext('2d');
+    const dis: number = 2;
 
-    img.width = width + 4;
-    img.height = height + 4;
+    img.width = width + dis * 2;
+    img.height = height + dis * 2;
 
+    // draw a circle
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(img.width / 2, img.height / 2, width / 2, 0, Math.PI * 2);
@@ -38,6 +40,13 @@ const snakeImageStore = {
     // ctx.strokeStyle = strokeColor;
     // ctx.stroke();
     ctx.fill();
+
+    // draw line on snake's back
+    ctx.beginPath();
+    ctx.moveTo(img.width / 2, img.height - dis);
+    ctx.lineTo(img.width / 2, (img.height - dis + img.height / 2) / 2);
+    ctx.strokeStyle = strokeColor;
+    ctx.stroke();
 
     return img;
   },
@@ -61,35 +70,36 @@ const snakeImageStore = {
       ctx.fill();
       ctx.stroke();
 
+      // eyehole
       ctx.beginPath();
       ctx.fillStyle = '#000';
-      ctx.arc(eyeX + eyeRadius / 2, eyeY, eyeRadius / 4, 0, Math.PI * 2);
+      ctx.arc(eyeX, eyeY - eyeRadius / 2, eyeRadius / 4, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 画左眼
+    // left eye
     drawEye(
-      img.width / 2 + width / 2 - eyeRadius,
+      img.width / 2 - width / 2 + eyeRadius,
       img.height / 2 - height / 2 + eyeRadius
     );
 
-    // 画右眼
+    // right eye
     drawEye(
       img.width / 2 + width / 2 - eyeRadius,
-      img.height / 2 + height / 2 - eyeRadius
+      img.height / 2 - height / 2 + eyeRadius
     );
 
     return img;
   }
 };
 
-interface SnakeOptions extends BaseOptions {
+interface SnakeOptions extends SnakeBaseOptions {
   length?: number;
   fillColor?: string | Array<string>;
   strokeColor?: string;
 }
 
-export class Snake implements LookerInterface {
+export class Snake implements ObserverInterface {
   gamemap: GameMap;
   header: SnakeHeader;
   bodys: Array<SnakeBody> = [];
@@ -117,7 +127,7 @@ export class Snake implements LookerInterface {
       return snakeImageStore.getImage(0, imgWidth, imgHeight, color, strokeColor);
     });
     const len: number = bodyImages.length;
-    let cindex: number = 1;
+    let cindex: number = 0;
     let image: HTMLCanvasElement;
     for (let i = 0; i < options.length || 0; i++) {
       if (!image || (i + 1) % 5 === 0) {

@@ -12,9 +12,8 @@ export class SnakeBody extends SnakeBase {
   }
 
   move(): void {
-    if (this.tracer && this.tracer.queue.length >= this.queueLen) {
-      this.x = this.tracer.queue[0].x;
-      this.y = this.tracer.queue[0].y;
+    if (this.tracer.movementQueue.length >= this.movementQueueLen) {
+      this.updateMovement(this.tracer.movementQueue[0]);
     }
   }
 

@@ -7,7 +7,6 @@ export class SnakeHeader extends SnakeBase {
   constructor(options: SnakeBaseOptions) {
     super(options);
 
-    this.angle = BASE_ANGLE + Math.PI / 2;
     this.toAngle = this.angle;
   }
 

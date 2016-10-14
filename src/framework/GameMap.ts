@@ -6,7 +6,7 @@ interface ViewTracker {
   y: number;
 }
 
-// 地图类
+// Map class
 export class GameMap extends EventEmitter {
   ctx: CanvasRenderingContext2D;
   view: View;

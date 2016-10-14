@@ -1,7 +1,7 @@
 import 'es6-shim';
 import Stats = require('stats.js');
 import { GameMap } from './framework/GameMap';
-import { Looker } from './framework/Looker';
+import { Observer } from './framework/Observer';
 import { Snake } from './element/Snake';
 import * as config from '../common/config';
 import * as structs from '../common/structs';
@@ -15,34 +15,32 @@ if (module.hot) {
   module.hot.accept();
 }
 
-// ip地址
+// local ip address
 const localIp: string = (<HTMLInputElement>document.getElementById('ip')).value;
-
-// 是否初始化完毕
 let isInit: boolean = false;
-// 玩家id
+// player id
 let playerId: number;
-// 游戏地图
+// game map
 let gamemap: GameMap;
-// 是否观察者模式
-let isLooker: boolean = window.location.href.indexOf('looker=true') >= 0;
-// 视窗宽高
+// judge player is an observer or not
+let isObserver: boolean = window.location.href.indexOf('Observer=true') >= 0;
+// window's width and height
 let vWidth: number = window.innerWidth;
 let vHeight: number = window.innerHeight;
-// 玩家
-let player: Snake | Looker;
-// 记录鼠标位置
+// player object
+let player: Snake | Observer;
+// record mouse coord
 let mouseCoords: { x?: number, y?: number } = {};
 
 // fps state
 const stats: Stats = new Stats();
 document.body.appendChild(stats.dom);
 
-// websocket实例
+// websocket
 const ws: WebSocket = new WebSocket(`ws://${localIp}:${config.socketPort}`);
 ws.binaryType = 'arraybuffer';
 
-// websocket连接成功
+// websocket connected
 ws.onopen = () => {
   sendData({
     opt: config.CMD_INIT,
@@ -57,7 +55,6 @@ ws.onerror = () => {
 ws.onclose = () => {
   console.log('closed');
 
-  // 如果未初始化，则采用单机版
   if (!isInit) {
     const x = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
     const y = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
@@ -65,7 +62,7 @@ ws.onclose = () => {
   }
 };
 
-// 接收信息推送
+// receive data
 ws.onmessage = e => {
   let obj: utils.EncodeData;
   let data: structs.Struct;
@@ -87,16 +84,16 @@ ws.onmessage = e => {
 };
 
 /**
- * 初始化游戏
+ * game init
  */
 function initGame(x: number, y: number): void {
   isInit = true;
 
   gamemap = new GameMap(canvas, vWidth, vHeight);
 
-  // 创建玩家对象
-  if (isLooker) {
-    player = new Looker(gamemap, x, y);
+  // create player
+  if (isObserver) {
+    player = new Observer(gamemap, x, y);
   } else {
     player = new Snake({
       gamemap,
@@ -104,6 +101,7 @@ function initGame(x: number, y: number): void {
       y,
       size: 40,
       length: 40,
+      angle: Math.random() * 2 * Math.PI,
       fillColor: ['#fff', '#333']
     }, false);
   }
@@ -112,7 +110,7 @@ function initGame(x: number, y: number): void {
   animate();
 }
 
-// 动画循环
+// animation loop
 const timeout: number = 0;
 let framecount: number = 0;
 let time: number = +new Date();
@@ -123,7 +121,7 @@ function animate(): void {
   if (ntime - time > timeout) {
     time = ntime;
 
-    // 更新地图，并且更新玩家操作
+    // update map and player
     gamemap.update(player, () => {
       player.update();
     });
@@ -134,7 +132,7 @@ function animate(): void {
 }
 
 /**
- * 发送数据
+ * send data
  */
 function sendData(data: utils.EncodeData, isBuffer: boolean): void {
   let buf: ArrayBuffer | string;
@@ -148,10 +146,9 @@ function sendData(data: utils.EncodeData, isBuffer: boolean): void {
 }
 
 /**
- * 事件绑定
+ * event binding
  */
 function binding() {
-  // 鼠标/手指 跟蛇运动的交互事件绑定
   if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
     window.addEventListener('touchstart', e => {
       e.preventDefault();
@@ -167,13 +164,13 @@ function binding() {
       player.moveTo(mouseCoords.x, mouseCoords.y);
     });
 
-    if (player instanceof Looker) {
+    if (player instanceof Observer) {
       window.addEventListener('touchend', e => {
-        (<Looker>player).stop();
+        (<Observer>player).stop();
       });
     }
   } else {
-    // 蛇头跟随鼠标的移动而变更移动方向
+    // change snake's direction when mouse moving 
     window.addEventListener('mousemove', e => {
       const evt: MouseEvent = e || <MouseEvent>window.event;
       mouseCoords.x = evt.clientX + gamemap.view.x;
@@ -182,12 +179,12 @@ function binding() {
     });
 
     // if (player instanceof Snake) {
-    //   // 鼠标按下让蛇加速
+    //   // speedup
     //   window.addEventListener('mousedown', () => {
     //     (<Snake>player).speedUp();
     //   });
 
-    //   // 鼠标抬起停止加速
+    //   // speeddown
     //   window.addEventListener('mouseup', () => {
     //     (<Snake>player).speedDown();
     //   });

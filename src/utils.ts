@@ -36,23 +36,3 @@ export function decode(buf: ArrayBuffer): EncodeData {
   }
   return data;
 }
-
-/**限制element的位置 */
-export function limitElement(
-  ele: { width: number, height: number, x: number, y: number },
-  box: { width: number, height: number }
-): void {
-  const whalf: number = ele.width / 2;
-  if (ele.x < whalf) {
-    ele.x = whalf;
-  } else if (ele.x + whalf > box.width) {
-    ele.x = box.width - whalf;
-  }
-
-  const hhalf = ele.height / 2;
-  if (ele.y < hhalf) {
-    ele.y = hhalf;
-  } else if (ele.y + hhalf > box.height) {
-    ele.y = box.height - hhalf;
-  }
-}
