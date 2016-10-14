@@ -11,14 +11,20 @@
 ## Installation
 
 ```
-npm install && npm run dev
+npm install
+```
+
+## Develop
+
+```
+npm run dev
 ```
 
 Open your chrome and visit [http://localhost:9999](http://localhost:9999)
 
-## Build
+## Release
 ```
-npm run build
+npm run release
 ```
 
 ## Tutorial

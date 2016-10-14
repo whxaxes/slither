@@ -1,16 +1,10 @@
-/**
- * Created by wanghx on 5/3/16.
- *
- * SnakeHeader
- *
- */
+import { SnakeBase, SnakeBaseOptions } from './SnakeBase';
+import { BASE_ANGLE } from '../../common/config';
 
-import SnakeBase from './SnakeBase';
-import { BASE_ANGLE } from '../constant';
+export class SnakeHeader extends SnakeBase {
+  private toAngle: number;
 
-// 蛇头类
-export default class SnakeHeader extends SnakeBase {
-  constructor(options) {
+  constructor(options: SnakeBaseOptions) {
     super(options);
 
     this.angle = BASE_ANGLE + Math.PI / 2;
@@ -20,12 +14,12 @@ export default class SnakeHeader extends SnakeBase {
   /**
    * 转向某个角度
    */
-  directTo(angle) {
+  directTo(angle: number): void {
     // 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
-    const oldAngle = Math.abs(this.toAngle % (Math.PI * 2));
+    const oldAngle: number = Math.abs(this.toAngle % (Math.PI * 2));
 
     // 转了多少圈
-    let rounds = ~~(this.toAngle / (Math.PI * 2));
+    let rounds: number = ~~(this.toAngle / (Math.PI * 2));
 
     this.toAngle = angle;
 
@@ -41,11 +35,13 @@ export default class SnakeHeader extends SnakeBase {
     this.toAngle += rounds * Math.PI * 2;
   }
 
-  // 根据蛇头角度计算水平速度和垂直速度
-  velocity() {
-    const angle = this.angle % (Math.PI * 2);
-    const vx = Math.abs(this.speed * Math.sin(angle));
-    const vy = Math.abs(this.speed * Math.cos(angle));
+  /**
+   * 根据蛇头角度计算水平速度和垂直速度
+   */
+  velocity(): void {
+    const angle: number = this.angle % (Math.PI * 2);
+    const vx: number = Math.abs(this.speed * Math.sin(angle));
+    const vy: number = Math.abs(this.speed * Math.cos(angle));
 
     if (angle < Math.PI / 2) {
       this.vx = vx;
@@ -62,23 +58,19 @@ export default class SnakeHeader extends SnakeBase {
     }
   }
 
-  /**
-   * 增加蛇头的逐帧逻辑
-   */
-  update() {
+  move() {
     this.turnAround();
-
     this.velocity();
-
-    super.update();
+    this.x += this.vx;
+    this.y += this.vy;
   }
 
   /**
-   * 蛇头转头
-   */
-  turnAround() {
-    const angleDistance = this.toAngle - this.angle; // 与目标角度之间的角度差
-    const turnSpeed = 0.045; // 转头速度
+  * 蛇头转头
+  */
+  turnAround(): void {
+    const angleDistance: number = this.toAngle - this.angle; // 与目标角度之间的角度差
+    const turnSpeed: number = 0.045; // 转头速度
 
     // 当转到目标角度, 重置蛇头角度
     if (Math.abs(angleDistance) <= turnSpeed) {

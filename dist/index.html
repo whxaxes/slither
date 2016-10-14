@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -15,12 +16,26 @@
   <meta name="msapplication-tap-highlight" content="no">
   <title>slither</title>
   <style>
-    *{margin:0;padding:0;-webkit-user-select: none;}
-    html,body,#cas{width:100%;height:100%;overflow: hidden;background-color: #000;}
+    * {
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+    }
+    
+    html,
+    body,
+    #cas {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
   </style>
 </head>
+
 <body>
-<canvas id="cas">您的浏览器太渣啦~ 换电脑吧(๑•̀ㅁ•́ฅ)</canvas>
-<script src="./dist/main.bundle.js"></script>
-</body>
+  <input type="hidden" id="ip" value="{{ IP }}">
+  <canvas id="cas">您的浏览器太渣啦~ 换电脑吧(๑•̀ㅁ•́ฅ)</canvas>
+<script type="text/javascript" src="main.bundle.js"></script></body>
+
 </html>
