@@ -2,6 +2,7 @@
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const config = require('./config');
+const structs = require('./structs');
 const wss = new WebSocketServer({ port: config.socketPort });
 
 let idKey = 0;
@@ -39,25 +40,32 @@ wss.on('connection', ws => {
         ws.frameWidth = obj.data[0];
         ws.frameHeight = obj.data[1];
         ws.playerId = idKey++;
-        ws.snakeX = ~~(Math.random() * (config.MAP_WIDTH - ws.frameWidth) + ws.frameWidth / 2);
-        ws.snakeY = ~~(Math.random() * (config.MAP_HEIGHT - ws.frameHeight) + ws.frameHeight / 2);
+        ws.snakeX = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
+        ws.snakeY = ~~(Math.random() * (config.MAP_HEIGHT - 100) + 100 / 2);
         ws.name = obj.name;
 
         // 响应初始化
         ws.send(encode({
           opt: config.CMD_INIT_ACK,
-          data: [ws.playerId, ws.snakeX, ws.snakeY]
+          data: structs.objToArray({
+            id: ws.playerId,
+            x: ws.snakeX,
+            y: ws.snakeY
+          }, 'snake')
         }));
         break;
 
       case config.CMD_SYNC_MAIN_COORD:
-        ws.snakeX = obj.data[0];
-        ws.snakeY = obj.data[1];
-        ws.bodys = obj.data.slice(2);
+        const data = structs.arrayToObj(obj.data, 'snake');
+        ws.angle = data.angle;
+        ws.size = data.size;
+        ws.snakeX = data.x;
+        ws.snakeY = data.y;
+        ws.bodys = data.bodys;
 
         wss.broadcast(encode({
           opt: config.CMD_SYNC_OTHER_COORD,
-          data: [ws.playerId].concat(obj.data)
+          data: obj.data
         }));
         break;
 
@@ -82,7 +90,7 @@ function encode(data) {
   const buf = new Buffer(bufLen);
   buf.writeUInt8(data.opt);
   data.data.forEach((value, i) => {
-    buf.writeUInt16BE(value, i * VALUE_LEN + OPT_LEN);
+    buf.writeUInt16BE(Math.abs(parseInt(value)), i * VALUE_LEN + OPT_LEN);
   });
   return buf;
 }

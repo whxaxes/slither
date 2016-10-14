@@ -84,24 +84,9 @@ const snakeImgStore = {
   }
 };
 
-// 蛇类
-export default class Snake {
+// 观察者类
+export class Looker {
   constructor(options) {
-    const imgWidth = 60;
-    const imgHeight = 60;
-    const fillColor = options.fillColor || '#fff';
-    const strokeColor = options.strokeColor || '#000';
-
-    this.bodys = [];
-    this.point = 0;
-
-    // 蛇身图层
-    this.bodyImage = snakeImgStore.getImage(0, imgWidth, imgHeight, fillColor, strokeColor);
-
-    // 蛇头图层
-    this.headerImage = snakeImgStore.getImage(1, imgWidth, imgHeight, fillColor, strokeColor);
-
-    // 初始化
     this.init(options);
   }
 
@@ -118,6 +103,83 @@ export default class Snake {
    * @param options
    */
   init(options) {
+    this.header = new SnakeHeader(options);
+  }
+
+  /**
+   * 根据传入坐标, 获取坐标点相对于蛇的角度
+   * @param nx
+   * @param ny
+   */
+  directTo(nx, ny) {
+    const x = nx - this.header.x;
+    const y = this.header.y - ny;
+    let angle = Math.atan(Math.abs(x / y));
+
+    // 计算角度, 角度值为 0-360
+    if (x > 0 && y < 0) {
+      angle = Math.PI - angle;
+    } else if (x < 0 && y < 0) {
+      angle = Math.PI + angle;
+    } else if (x < 0 && y > 0) {
+      angle = Math.PI * 2 - angle;
+    }
+
+    this.header.directTo(angle);
+  }
+
+  checkLimit() {
+    // 不让走出边界
+    const whalf = this.header.width / 2;
+    if (this.header.x < whalf) {
+      this.header.x = whalf;
+    } else if (this.header.x + whalf > map.width) {
+      this.header.x = map.width - whalf;
+    }
+
+    const hhalf = this.header.height / 2;
+    if (this.header.y < hhalf) {
+      this.header.y = hhalf;
+    } else if (this.header.y + hhalf > map.height) {
+      this.header.y = map.height - hhalf;
+    }
+  }
+
+  update() {
+    this.checkLimit();
+    this.header.update();
+  }
+}
+
+// 蛇类
+export class Snake extends Looker {
+  constructor(options) {
+    super(options);
+  }
+
+  get size() {
+    return this.header.width;
+  }
+
+  /**
+   * 初始化蛇实例
+   * @param options
+   */
+  init(options) {
+    const imgWidth = 60;
+    const imgHeight = 60;
+    const fillColor = options.fillColor || '#fff';
+    const strokeColor = options.strokeColor || '#000';
+
+    this.bodys = [];
+    this.point = 0;
+
+    // 蛇身图层
+    this.bodyImage = snakeImgStore.getImage(0, imgWidth, imgHeight, fillColor, strokeColor);
+
+    // 蛇头图层
+    this.headerImage = snakeImgStore.getImage(1, imgWidth, imgHeight, fillColor, strokeColor);
+    
     // 创建脑袋
     this.header = new SnakeHeader(Object.assign(options, {
       img: this.headerImage
@@ -153,39 +215,6 @@ export default class Snake {
   }
 
   /**
-   * 根据传入坐标, 获取坐标点相对于蛇的角度
-   * @param nx
-   * @param ny
-   */
-  moveTo(nx, ny) {
-    const x = nx - this.header.x;
-    const y = this.header.y - ny;
-    let angle = Math.atan(Math.abs(x / y));
-
-    // 计算角度, 角度值为 0-360
-    if (x > 0 && y < 0) {
-      angle = Math.PI - angle;
-    } else if (x < 0 && y < 0) {
-      angle = Math.PI + angle;
-    } else if (x < 0 && y > 0) {
-      angle = Math.PI * 2 - angle;
-    }
-
-    this.header.directTo(angle);
-  }
-
-  /**
-   * 获取所有坐标
-   */
-  getAllCoords() {
-    const coords = [this.header.x, this.header.y];
-    this.bodys.forEach(body => {
-      coords.push(body.x, body.y);
-    });
-    return coords;
-  }
-
-  /**
    * 吃掉食物
    * @param food
    */
@@ -215,35 +244,27 @@ export default class Snake {
   }
 
   // 渲染蛇头蛇身
-  update(notRender) {
-    // 不让蛇走出边界, 也就是蛇头
-    const whalf = this.header.width / 2;
-    if (this.header.x < whalf) {
-      this.header.x = whalf;
-    } else if (this.header.x + whalf > map.width) {
-      this.header.x = map.width - whalf;
-    }
-
-    const hhalf = this.header.height / 2;
-    if (this.header.y < hhalf) {
-      this.header.y = hhalf;
-    } else if (this.header.y + hhalf > map.height) {
-      this.header.y = map.height - hhalf;
-    }
+  update(notRender, notUpdate) {
+    this.checkLimit();
 
     // 渲染蛇头蛇身
     for (let i = this.bodys.length - 1; i >= 0; i--) {
       this.bodys[i].update();
-
-      if (!notRender) {
-        this.bodys[i].render();
-      }
+      this.bodys[i].render();
     }
 
     this.header.update();
+    this.header.render();
+  }
+}
 
-    if (!notRender) {
-      this.header.render();
+// 非己方蛇
+export class CustomSnake extends Snake {
+  update() {
+    for (let i = this.bodys.length - 1; i >= 0; i--) {
+      this.bodys[i].render();
     }
+
+    this.header.render();
   }
 }

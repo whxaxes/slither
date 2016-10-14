@@ -10,10 +10,11 @@ const config = require('./config');
 
 const localIp = getIp();
 const outputDomain = `http://${localIp}:${config.devPort}`;
-const webpackConfig = merge(require('./webpack.base'), {
+const publicPath = `${outputDomain}/static/`;
+const compiler = webpack(merge(require('./webpack.base'), {
   devtool: 'eval',
   output: {
-    publicPath: `${outputDomain}/static/`,
+    publicPath,
   },
   entry: {
     vendor: [
@@ -24,12 +25,10 @@ const webpackConfig = merge(require('./webpack.base'), {
   plugins: [
     new webpack.HotModuleReplacementPlugin()
   ]
-});
-
-const compiler = webpack(webpackConfig);
+}));
 
 new WebpackDevServer(compiler, {
-  publicPath: `${outputDomain}/static/`,
+  publicPath,
   hot: true,
   historyApiFallback: true,
   stats: {
@@ -53,13 +52,15 @@ function getIp() {
   const interfaces = os.networkInterfaces();
   let IPv4 = '127.0.0.1';
 
-  for (let key in interfaces) {
-    interfaces[key].forEach((details) => {
+  Object.keys(interfaces).forEach(key => {
+    for (let i = 0; i < interfaces[key].length; i++) {
+      const details = interfaces[key][i];
       if (details.family == 'IPv4' && (key == 'en0' || key == 'eth0')) {
         IPv4 = details.address;
+        return;
       }
-    });
-  }
+    }
+  });
 
   return IPv4;
 }

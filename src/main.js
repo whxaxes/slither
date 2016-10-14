@@ -6,11 +6,12 @@
  */
 
 import Stats from 'stats.js';
-import Snake from './elements/Snake';
+import { Snake, CustomSnake, Looker } from './elements/Snake';
 import Food from './elements/Food';
 import frame from './frame';
 import map from './map';
 import config from 'config';
+import structs from 'structs';
 
 const raf = window.requestAnimationFrame ||
   window.webkitRequestAnimationFrame ||
@@ -64,6 +65,7 @@ ws.onopen = () => {
 
 ws.onmessage = e => {
   let obj;
+  let data;
   const buf = e.data;
 
   if (buf instanceof ArrayBuffer) {
@@ -74,32 +76,32 @@ ws.onmessage = e => {
 
   switch (obj.opt) {
     case config.CMD_INIT_ACK:
-      playerId = obj.data[0];
-      initGame(obj.data[1], obj.data[2]);
+      data = structs.arrayToObj(obj.data, 'snake');
+      playerId = data.id;
+      initGame(data.x, data.y);
       break;
 
     case config.CMD_SYNC_OTHER_COORD:
       let snake;
-      const bodys = obj.data.slice(3);
+      data = structs.arrayToObj(obj.data, 'snake');
 
-      if (playerId === obj.data[0]) {
+      if (playerId === data.id) {
         return;
-      } else if (snakes.has(obj.data[0])) {
-        snake = snakes.get(obj.data[0]);
+      } else if (snakes.has(data.id)) {
+        snake = snakes.get(data.id);
       } else {
-        snakes.set(obj.data[0], snake = new Snake({
-          x: 0,
-          y: 0,
-          size: 40,
-          length: bodys.length / 2
+        snakes.set(data.id, snake = new CustomSnake({
+          size: data.size,
+          length: data.bodys.length / 2
         }));
       }
 
-      snake.header.x = obj.data[1];
-      snake.header.y = obj.data[2];
+      snake.header.x = data.x;
+      snake.header.y = data.y;
+      snake.header.angle = data.angle * Math.PI / 180;
       snake.bodys.forEach((body, i) => {
-        body.x = bodys[i * 2];
-        body.y = bodys[i * 2 + 1];
+        body.x = data.bodys[i * 2];
+        body.y = data.bodys[i * 2 + 1];
       });
       break;
 
@@ -107,34 +109,6 @@ ws.onmessage = e => {
       break;
   }
 };
-
-const OPT_LEN = 1; // 操作符长度
-const VALUE_LEN = 2; // 值长度
-
-// 将数据转成arraybuffer
-function encode(data) {
-  // 操作符1个字节，单个数值两个字节
-  const bufLen = OPT_LEN + data.data.length * VALUE_LEN;
-  const buf = new ArrayBuffer(bufLen);
-  const dv = new DataView(buf);
-  dv.setInt8(0, data.opt);
-  data.data.forEach((value, i) => {
-    dv.setUint16(i * VALUE_LEN + OPT_LEN, parseInt(value));
-  });
-  return buf;
-}
-
-// 将arraybuffer转成对象
-function decode(buf) {
-  const dv = new DataView(buf);
-  const data = {};
-  data.opt = dv.getUint8(0);
-  data.data = [];
-  for (let i = OPT_LEN, max = buf.byteLength - OPT_LEN; i < max; i += VALUE_LEN) {
-    data.data.push(dv.getUint16(i));
-  }
-  return data;
-}
 
 /**
  * 初始化游戏
@@ -157,12 +131,18 @@ function initGame(x, y) {
   });
 
   // 创建蛇类对象
-  snakes.set(playerId, mainSnake = new Snake({
-    x,
-    y,
-    size: isLooker ? 1 : 40,
-    length: isLooker ? 0 : 10
-  }));
+  if (isLooker) {
+    mainSnake = new Looker({ x, y });
+  } else {
+    mainSnake = new Snake({
+      x,
+      y,
+      size: 40,
+      length: 10
+    });
+  }
+
+  snakes.set(playerId, mainSnake);
 
   // 动画开始循环
   animate();
@@ -255,7 +235,7 @@ function animate() {
     });
 
     snakes.forEach(snake => {
-      snake.update((snake === mainSnake) && isLooker);
+      snake.update();
     });
 
     map.renderSmallMap();
@@ -269,9 +249,21 @@ function animate() {
 
       // 每5帧同步一次数据
       if (framecount > 5 && !isLooker) {
+        const bodys = [];
+        mainSnake.bodys.forEach(body => {
+          bodys.push(body.x, body.y);
+        });
+
         sendData({
           opt: config.CMD_SYNC_MAIN_COORD,
-          data: mainSnake.getAllCoords()
+          data: structs.objToArray({
+            id: playerId,
+            angle: (mainSnake.header.angle * (180 / Math.PI)) % 360,
+            size: mainSnake.size,
+            x: mainSnake.header.x,
+            y: mainSnake.header.y,
+            bodys
+          }, 'snake')
         });
       }
     }
@@ -291,21 +283,21 @@ function eventBind() {
       e.preventDefault();
       mouseCoords.x = e.touches[0].pageX + frame.x;
       mouseCoords.y = e.touches[0].pageY + frame.y;
-      mainSnake.moveTo(mouseCoords.x, mouseCoords.y);
+      mainSnake.directTo(mouseCoords.x, mouseCoords.y);
     });
 
     window.addEventListener('touchstart', e => {
       e.preventDefault();
       mouseCoords.x = e.touches[0].pageX + frame.x;
       mouseCoords.y = e.touches[0].pageY + frame.y;
-      mainSnake.moveTo(mouseCoords.x, mouseCoords.y);
+      mainSnake.directTo(mouseCoords.x, mouseCoords.y);
     });
   } else {
     // 蛇头跟随鼠标的移动而变更移动方向
     window.addEventListener('mousemove', (e = window.event) => {
       mouseCoords.x = e.clientX + frame.x;
       mouseCoords.y = e.clientY + frame.y;
-      mainSnake.moveTo(mouseCoords.x, mouseCoords.y);
+      mainSnake.directTo(mouseCoords.x, mouseCoords.y);
     });
 
     if (mainSnake) {
@@ -316,4 +308,32 @@ function eventBind() {
       window.addEventListener('mouseup', mainSnake.speedDown.bind(mainSnake));
     }
   }
+}
+
+const OPT_LEN = 1; // 操作符长度
+const VALUE_LEN = 2; // 值长度
+
+// 将数据转成arraybuffer
+function encode(data) {
+  // 操作符1个字节，单个数值两个字节
+  const bufLen = OPT_LEN + data.data.length * VALUE_LEN;
+  const buf = new ArrayBuffer(bufLen);
+  const dv = new DataView(buf);
+  dv.setInt8(0, data.opt);
+  data.data.forEach((value, i) => {
+    dv.setUint16(i * VALUE_LEN + OPT_LEN, Math.abs(parseInt(value)));
+  });
+  return buf;
+}
+
+// 将arraybuffer转成对象
+function decode(buf) {
+  const dv = new DataView(buf);
+  const data = {};
+  data.opt = dv.getUint8(0);
+  data.data = [];
+  for (let i = OPT_LEN, max = buf.byteLength - OPT_LEN; i < max; i += VALUE_LEN) {
+    data.data.push(dv.getUint16(i));
+  }
+  return data;
 }

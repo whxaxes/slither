@@ -10,9 +10,6 @@ exports.CMD_INIT_ACK = 101;                 // 初始化命令响应
 exports.CMD_SYNC_MAIN_COORD = 102;          // 同步坐标
 exports.CMD_SYNC_OTHER_COORD = 103;
 
-exports.OPT_LEN = 1;                        // 操作符长度
-exports.VALUE_LEN = 2;                      // 值长度
-
 exports.port = 9999;                        // 服务端口
 exports.devPort = exports.port - 1;         // 开发服务端口
 exports.socketPort = exports.port - 2;      // socket服务端口

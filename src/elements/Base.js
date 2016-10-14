@@ -21,10 +21,10 @@ import frame from '../frame';
 
 export default class Base {
   constructor(options) {
-    this.x = +options.x;
-    this.y = +options.y;
-    this.width = options.size || options.width;
-    this.height = options.size || options.height;
+    this.x = +(options.x || 0);
+    this.y = +(options.y || 0);
+    this.width = options.size || options.width || 1;
+    this.height = options.size || options.height || 1;
   }
 
   /**

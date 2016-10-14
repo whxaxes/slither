@@ -38,7 +38,8 @@ module.exports = {
   resolve: {
     extensions: ['', '.js'],
     alias: {
-      'config': path.resolve('./config')
+      'config': path.resolve('./config'),
+      'structs': path.resolve('./structs')
     }
   }
 };
