@@ -25,7 +25,7 @@ let playerId: number;
 // game map
 let gamemap: GameMap;
 // judge player is an observer or not
-let isObserver: boolean = window.location.href.indexOf('Observer=true') >= 0;
+let isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
 // window's width and height
 let vWidth: number = window.innerWidth;
 let vHeight: number = window.innerHeight;
@@ -169,9 +169,10 @@ function animate(): void {
             foods.splice(foods.indexOf(food), 1);
 
             // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-            gamemap.setToScale(
-              gamemap.scale + added / ((<Snake>player).header.width * 3)
-            );
+            const newscale = gamemap.scale + added / ((<Snake>player).header.width * 3);
+            if (newscale < 1.6) {
+              gamemap.setToScale(newscale);
+            }
 
             return;
           }
@@ -248,6 +249,28 @@ function binding() {
       // speeddown
       window.addEventListener('mouseup', () => {
         (<Snake>player).speedDown();
+      });
+    } else {
+      window.addEventListener('keyup', e => {
+        switch (e.keyCode) {
+          case 87:
+            gamemap.setToScale(
+              gamemap.scale + 0.2
+            );
+            break;
+
+          case 83:
+            gamemap.setToScale(
+              gamemap.scale - 0.2
+            );
+            break;
+
+          case 65:
+            gamemap.setToScale(1);
+            break;
+
+          default: break;
+        }
       });
     }
   }

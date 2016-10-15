@@ -35,28 +35,28 @@ export abstract class Base {
    * 绘制时的x坐标, 要根据视窗来计算位置
    */
   get paintX(): number {
-    return this.gamemap.relative(this.x) - this.gamemap.view.x;
+    return this.gamemap.view.relativeX(this.x);
   }
 
   /**
    * 绘制时的y坐标, 要根据视窗来计算位置
    */
   get paintY(): number {
-    return this.gamemap.relative(this.y) - this.gamemap.view.y;
+    return this.gamemap.view.relativeY(this.y);
   }
 
   /**
    * 绘制宽度
    */
   get paintWidth(): number {
-    return this.gamemap.relative(this.width);
+    return this.gamemap.view.relativeW(this.width);
   }
 
   /**
    * 绘制高度
    */
   get paintHeight(): number {
-    return this.gamemap.relative(this.height);
+    return this.gamemap.view.relativeH(this.height);
   }
 
   /**

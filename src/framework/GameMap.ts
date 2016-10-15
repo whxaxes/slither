@@ -48,11 +48,11 @@ export class GameMap extends EventEmitter {
    * 设置map的缩放比例
    */
   setScale(scale: number): void {
-    if (scale >= 1.6 || scale < 1 || this.scale === scale) {
+    if (this.scale === scale) {
       return;
     }
 
-    this.scale = scale;
+    this.scale = scale < 1 ? 1 : scale;
     this.paintSizeReset();
 
     this.emit('scale_changed');
@@ -71,7 +71,7 @@ export class GameMap extends EventEmitter {
    * @returns {*}
    */
   relative(val: number): number {
-    return val + val * (1 - this.scale);
+    return val / this.scale;
   }
 
   /**
@@ -86,7 +86,12 @@ export class GameMap extends EventEmitter {
    */
   update(player: ViewTracker, callback: () => void): void {
     if (this.toScale && this.scale !== this.toScale) {
-      this.setScale(this.toScale);
+      const scaleDis = this.toScale - this.scale;
+      if (Math.abs(scaleDis) < 0.01) {
+        this.setScale(this.toScale);
+      } else {
+        this.setScale(this.scale + (this.toScale - this.scale) * 0.1);
+      }
     }
 
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);
@@ -228,5 +233,21 @@ class View {
   track(obj: ViewTracker) {
     this.x = this.gamemap.relative(obj.x) - this.width / 2;
     this.y = this.gamemap.relative(obj.y) - this.height / 2;
+  }
+
+  relativeX(x: number) {
+    return this.gamemap.relative(x) - this.x;
+  }
+
+  relativeY(y: number) {
+    return this.gamemap.relative(y) - this.y;
+  }
+
+  relativeW(width: number) {
+    return this.gamemap.relative(width);
+  }
+
+  relativeH(height: number) {
+    return this.gamemap.relative(height);
   }
 }
