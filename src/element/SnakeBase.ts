@@ -30,31 +30,23 @@ export abstract class SnakeBase extends Base {
   stopped: boolean = false;
   // save snake's movement
   movementQueue: Array<Movements> = [];
-  // length of queue
-  movementQueueLen: number = 1;
-  private _speed: number;
+  // maxlength of queue
+  movementQueueLen: number;
+  speed: number = SPEED;
   private _follower: SnakeBase;
 
   constructor(options: SnakeBaseOptions) {
     super(options);
 
-    this.angle = (options.angle || 0) + BASE_ANGLE;
     this.img = options.img;
     this.tracer = options.tracer;
+    if (options.tracer) {
+      this.angle = options.tracer.angle;
+    } else {
+      this.angle = (options.angle || 0) + BASE_ANGLE;
+    }
+    this.setSize(options.size);
     this.velocity();
-  }
-
-  set speed(value: number) {
-    this._speed = value;
-
-    // recaculate vx and vy
-    this.velocity();
-  }
-
-  get speed(): number {
-    return this._speed
-      ? this._speed
-      : (this._speed = this.tracer ? this.tracer.speed : SPEED);
   }
 
   set follower(follower: SnakeBase) {
@@ -102,16 +94,32 @@ export abstract class SnakeBase extends Base {
    */
   stop() {
     this.stopped = true;
-    this.vx = 0;
-    this.vy = 0;
+
+    if (this.follower) {
+      this.follower.stop();
+    }
+  }
+
+  /**
+   * continue moving
+   */
+  continue() {
+    this.stopped = false;
+
+    if (this.follower) {
+      this.follower.continue();
+    }
   }
 
   /**
    * set size
    */
-  setSize(width: number, height: number): void {
-    this.width = width;
-    this.height = height;
+  setSize(size: number): void {
+    this.width = size;
+    this.height = size;
+
+    // update movement queue length
+    this.movementQueueLen = ~~(0.5 + size * 0.15 / this.speed);
   }
 
   /**
@@ -119,6 +127,8 @@ export abstract class SnakeBase extends Base {
    */
   update(needMove: boolean = true): void {
     if (needMove && !this.stopped) {
+      this.move();
+
       // save movement
       this.movementQueue.push(
         new Movements(this.x, this.y, this.vx, this.vy, this.angle)
@@ -127,11 +137,7 @@ export abstract class SnakeBase extends Base {
       if (this.movementQueue.length > this.movementQueueLen) {
         this.movementQueue.shift();
       }
-
-      this.move();
     }
-
-    this.render();
   }
 
   render(): void {

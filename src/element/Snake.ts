@@ -1,6 +1,7 @@
 import { SnakeBaseOptions } from './SnakeBase';
 import { SnakeBody } from './SnakeBody';
 import { SnakeHeader } from './SnakeHeader';
+import { Food } from './Food';
 import { SPEED } from '../../common/config';
 import { GameMap } from '../framework/GameMap';
 import { ObserverInterface } from '../framework/Observer';
@@ -32,6 +33,7 @@ const snakeImageStore = {
     img.width = width + dis * 2;
     img.height = height + dis * 2;
 
+    ctx.save();
     // draw a circle
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -42,11 +44,15 @@ const snakeImageStore = {
     ctx.fill();
 
     // draw line on snake's back
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(img.width / 2, img.height - dis);
     ctx.lineTo(img.width / 2, (img.height - dis + img.height / 2) / 2);
     ctx.strokeStyle = strokeColor;
     ctx.stroke();
+
+    ctx.restore();
 
     return img;
   },
@@ -103,7 +109,10 @@ export class Snake implements ObserverInterface {
   gamemap: GameMap;
   header: SnakeHeader;
   bodys: Array<SnakeBody> = [];
+  bodyImages: Array<HTMLCanvasElement> = [];
+  colorIndex: number = 0;
   point: number = 0;
+  isSpeedUp: boolean = false;
 
   constructor(
     options: SnakeOptions,
@@ -123,16 +132,15 @@ export class Snake implements ObserverInterface {
     }));
 
     // 创建身躯实例，生成花纹
-    const bodyImages: Array<HTMLCanvasElement> = fillColors.map(color => {
+    this.bodyImages = fillColors.map(color => {
       return snakeImageStore.getImage(0, imgWidth, imgHeight, color, strokeColor);
     });
-    const len: number = bodyImages.length;
-    let cindex: number = 0;
+    const len: number = this.bodyImages.length;
     let image: HTMLCanvasElement;
     for (let i = 0; i < options.length || 0; i++) {
       if (!image || (i + 1) % 5 === 0) {
-        image = bodyImages[cindex % len];
-        cindex++;
+        image = this.bodyImages[this.colorIndex % len];
+        this.colorIndex++;
       }
 
       this.bodys.push(new SnakeBody(Object.assign(options, {
@@ -160,8 +168,8 @@ export class Snake implements ObserverInterface {
    * 往坐标点移动
    */
   moveTo(nx: number, ny: number) {
-    const x: number = nx - this.header.x;
-    const y: number = this.header.y - ny;
+    const x: number = nx - this.header.paintX;
+    const y: number = this.header.paintY - ny;
     let angle: number = Math.atan(Math.abs(x / y));
 
     // 计算角度, 角度值为 0-360
@@ -176,21 +184,55 @@ export class Snake implements ObserverInterface {
     this.header.directTo(angle);
   }
 
+  createBody() {
+
+  }
+
   /**加速 */
   speedUp(): void {
-    const newSpeed: number = SPEED * 2;
-    this.header.speed = newSpeed;
-    this.bodys.forEach(body => {
-      body.speed = newSpeed;
-    });
+    this.isSpeedUp = true;
   }
 
   /**减速 */
   speedDown(): void {
-    this.header.speed = SPEED;
-    this.bodys.forEach(body => {
-      body.speed = SPEED;
+    this.isSpeedUp = false;
+  }
+
+  stop() {
+    this.header.stop();
+  }
+
+  continue() {
+    this.header.continue();
+  }
+
+  eat(food: Food) {
+    this.point += food.point;
+
+    // 增加分数引起虫子体积增大
+    const added = food.point / 50;
+    this.header.setSize(this.header.width + added);
+    this.bodys.forEach(body => { body.setSize(body.width + added); });
+
+    const lastBody = this.bodys[this.bodys.length - 1];
+    let image: HTMLCanvasElement = lastBody.img;
+    if ((this.bodys.length + 1) % 5 === 0) {
+      image = this.bodyImages[this.colorIndex % this.bodyImages.length];
+      this.colorIndex++;
+    }
+
+    const addedBody = new SnakeBody({
+      gamemap: lastBody.gamemap,
+      x: lastBody.x,
+      y: lastBody.y,
+      size: lastBody.width,
+      tracer: lastBody,
+      img: image
     });
+
+    lastBody.follower = addedBody;
+    this.bodys.push(addedBody);
+    return added;
   }
 
   /**
@@ -200,11 +242,22 @@ export class Snake implements ObserverInterface {
     // 不让蛇走出地图外
     this.gamemap.limit(this.header);
 
+    // 通过update两次来达到加速效果
+    if (this.isSpeedUp) {
+      for (let i = this.bodys.length - 1; i >= 0; i--) {
+        this.bodys[i].update();
+      }
+
+      this.header.update();
+    }
+
     // 渲染蛇头蛇身
     for (let i = this.bodys.length - 1; i >= 0; i--) {
       this.bodys[i].update();
+      this.bodys[i].render();
     }
 
     this.header.update();
+    this.header.render();
   }
 }

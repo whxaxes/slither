@@ -30,10 +30,19 @@
       overflow: hidden;
       background-color: #000;
     }
+
+    #log {
+      position: absolute;
+      width: 100px;
+      right: 100px;
+      top: 100px;
+      color: #fff;
+    }
   </style>
 </head>
 
 <body>
+  <div id="log"></div>
   <input type="hidden" id="ip" value="{{ IP }}">
   <canvas id="cas">
     Your browser do not support canvas! (๑•̀ㅁ•́ฅ)

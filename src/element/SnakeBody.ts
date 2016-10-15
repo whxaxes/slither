@@ -1,19 +1,20 @@
 import { SnakeBase, SnakeBaseOptions } from './SnakeBase';
 
 // snake body必须有tracer
-interface SnakeBodyOptions extends SnakeBase {
+interface SnakeBodyOptions extends SnakeBaseOptions {
   tracer: SnakeBase;
 }
 
 export class SnakeBody extends SnakeBase {
-
   constructor(options: SnakeBodyOptions) {
     super(options);
   }
 
   move(): void {
-    if (this.tracer.movementQueue.length >= this.movementQueueLen) {
-      this.updateMovement(this.tracer.movementQueue[0]);
+    if (this.tracer.movementQueue.length >= this.tracer.movementQueueLen) {
+      this.updateMovement(
+        this.tracer.movementQueue.shift()
+      );
     }
   }
 

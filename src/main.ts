@@ -1,8 +1,10 @@
 import 'es6-shim';
 import Stats = require('stats.js');
+import { Base } from './element/Base';
 import { GameMap } from './framework/GameMap';
 import { Observer } from './framework/Observer';
 import { Snake } from './element/Snake';
+import { Food } from './element/Food';
 import * as config from '../common/config';
 import * as structs from '../common/structs';
 import * as utils from './utils';
@@ -16,7 +18,7 @@ if (module.hot) {
 }
 
 // local ip address
-const localIp: string = (<HTMLInputElement>document.getElementById('ip')).value;
+let localIp: string = (<HTMLInputElement>document.getElementById('ip')).value;
 let isInit: boolean = false;
 // player id
 let playerId: number;
@@ -32,9 +34,16 @@ let player: Snake | Observer;
 // record mouse coord
 let mouseCoords: { x?: number, y?: number } = {};
 
+// save food object
+let foods: Array<Food> = [];
+
 // fps state
 const stats: Stats = new Stats();
 document.body.appendChild(stats.dom);
+
+if (localIp.indexOf('{{') >= 0) {
+  localIp = '127.0.0.1';
+}
 
 // websocket
 const ws: WebSocket = new WebSocket(`ws://${localIp}:${config.socketPort}`);
@@ -96,18 +105,43 @@ function initGame(x: number, y: number): void {
     player = new Observer(gamemap, x, y);
   } else {
     player = new Snake({
-      gamemap,
-      x,
-      y,
+      gamemap, x, y,
       size: 40,
       length: 40,
       angle: Math.random() * 2 * Math.PI,
-      fillColor: ['#fff', '#333']
+      fillColor: ['#fff', '#333'],
+      strokeColor: '#333'
     }, false);
+  }
+
+  for (let i = 0; i < 100; i++) {
+    const point = ~~(Math.random() * 30 + 50);
+    const size = ~~(point / 3);
+
+    foods.push(new Food({
+      gamemap, size, point,
+      x: ~~(Math.random() * (gamemap.width - 2 * size) + size),
+      y: ~~(Math.random() * (gamemap.height - 2 * size) + size)
+    }));
   }
 
   binding();
   animate();
+}
+
+/**
+ * collision check
+ */
+function collision(dom: Base, dom2: Base, isRect?: boolean) {
+  const disX = dom.x - dom2.x;
+  const disY = dom.y - dom2.y;
+
+  if (isRect) {
+    return Math.abs(disX) < (dom.width + dom2.width) &&
+      Math.abs(disY) < (dom.height + dom2.height);
+  }
+
+  return Math.hypot(disX, disY) < (dom.width + dom2.width) / 2;
 }
 
 // animation loop
@@ -124,7 +158,34 @@ function animate(): void {
     // update map and player
     gamemap.update(player, () => {
       player.update();
+
+      if (player instanceof Snake) {
+        // 渲染食物, 以及检测食物与蛇头的碰撞
+        foods.forEach(food => {
+          food.update();
+
+          if (food.visible && collision((<Snake>player).header, food)) {
+            const added = (<Snake>player).eat(food);
+            foods.splice(foods.indexOf(food), 1);
+
+            // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
+            gamemap.setToScale(
+              gamemap.scale + added / ((<Snake>player).header.width * 3)
+            );
+
+            return;
+          }
+        });
+      }
+
     });
+
+    // if (mouseCoords.x) {
+    //   gamemap.ctx.beginPath();
+    //   gamemap.ctx.moveTo((<Snake>player).header.paintX, (<Snake>player).header.paintY);
+    //   gamemap.ctx.lineTo(mouseCoords.x, mouseCoords.y);
+    //   gamemap.ctx.stroke();
+    // }
   }
 
   stats.end();
@@ -152,15 +213,15 @@ function binding() {
   if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
     window.addEventListener('touchstart', e => {
       e.preventDefault();
-      mouseCoords.x = (<TouchEvent>e).touches[0].pageX + gamemap.view.x;
-      mouseCoords.y = (<TouchEvent>e).touches[0].pageY + gamemap.view.y;
+      mouseCoords.x = (<TouchEvent>e).touches[0].pageX;
+      mouseCoords.y = (<TouchEvent>e).touches[0].pageY;
       player.moveTo(mouseCoords.x, mouseCoords.y);
     });
 
     window.addEventListener('touchmove', e => {
       e.preventDefault();
-      mouseCoords.x = (<TouchEvent>e).touches[0].pageX + gamemap.view.x;
-      mouseCoords.y = (<TouchEvent>e).touches[0].pageY + gamemap.view.y;
+      mouseCoords.x = (<TouchEvent>e).touches[0].pageX;
+      mouseCoords.y = (<TouchEvent>e).touches[0].pageY;
       player.moveTo(mouseCoords.x, mouseCoords.y);
     });
 
@@ -173,21 +234,21 @@ function binding() {
     // change snake's direction when mouse moving 
     window.addEventListener('mousemove', e => {
       const evt: MouseEvent = e || <MouseEvent>window.event;
-      mouseCoords.x = evt.clientX + gamemap.view.x;
-      mouseCoords.y = evt.clientY + gamemap.view.y;
+      mouseCoords.x = evt.clientX;
+      mouseCoords.y = evt.clientY;
       player.moveTo(mouseCoords.x, mouseCoords.y);
     });
 
-    // if (player instanceof Snake) {
-    //   // speedup
-    //   window.addEventListener('mousedown', () => {
-    //     (<Snake>player).speedUp();
-    //   });
+    if (player instanceof Snake) {
+      // speedup
+      window.addEventListener('mousedown', () => {
+        (<Snake>player).speedUp();
+      });
 
-    //   // speeddown
-    //   window.addEventListener('mouseup', () => {
-    //     (<Snake>player).speedDown();
-    //   });
-    // }
+      // speeddown
+      window.addEventListener('mouseup', () => {
+        (<Snake>player).speedDown();
+      });
+    }
   }
 }

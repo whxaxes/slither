@@ -24,7 +24,7 @@ export class GameMap extends EventEmitter {
     public canvas: HTMLCanvasElement,
     vwidth: number,
     vheight: number,
-    private scale: number = 1
+    public scale: number = 1
   ) {
     super();
     this.canvas.width = vwidth;
@@ -86,7 +86,7 @@ export class GameMap extends EventEmitter {
    */
   update(player: ViewTracker, callback: () => void): void {
     if (this.toScale && this.scale !== this.toScale) {
-      this.scale = this.toScale;
+      this.setScale(this.toScale);
     }
 
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);
