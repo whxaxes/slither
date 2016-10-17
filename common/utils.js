@@ -48,6 +48,31 @@ exports.arrayToObj = function(arr, type) {
   return obj;
 };
 
+Uint8Array.prototype.setUint = function(value, offset, byteLength) {
+  value = +value;
+  offset = offset >>> 0;
+  byteLength = byteLength >>> 0;
+  var i = byteLength - 1;
+  var mul = 1;
+  this[offset + i] = value;
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) >>> 0;
+  }
+
+  return offset + byteLength;
+};
+
+Uint8Array.prototype.getUint = function(offset, byteLength) {
+  offset = offset >>> 0;
+  byteLength = byteLength >>> 0;
+  var val = this[offset + --byteLength];
+  var mul = 1;
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul;
+  }
+  return val;
+};
+
 // allocate buffer and return a dataview
 var allocate = (function() {
   if (!Buffer || !Buffer.allocate) {
@@ -63,8 +88,8 @@ var allocate = (function() {
       poolOffset = 0;
     };
 
-    var createDv = function(arraybuffer, offset, length) {
-      return new DataView(arraybuffer, offset, length);
+    var createBuf = function(arraybuffer, offset, length) {
+      return new Uint8Array(arraybuffer, offset, length);
     };
 
     createPool();
@@ -72,18 +97,17 @@ var allocate = (function() {
     return function(size) {
       if (size < poolSize) {
         if (size > (poolSize - poolOffset)) { poolOffset = 0; }
-        var dv = createDv(allocPool, poolOffset, size);
+        var dv = createBuf(allocPool, poolOffset, size);
         poolOffset += size;
         return dv;
       } else {
-        return createDv(createArrayBuffer(size), 0, size);
+        return createBuf(createArrayBuffer(size), 0, size);
       }
     };
   } else {
-    Buffer.poolSize = 1 * 1024 * 1024;
+    Buffer.poolSize = 100 * 1024;
     return function(size) {
-      var fastbuf = Buffer.allocate(size);
-      return new DataView(fastbuf.buffer, fastbuf.byteOffset, fastbuf.byteLength);
+      return Buffer.allocate(size);
     };
   }
 })();
@@ -91,30 +115,27 @@ var allocate = (function() {
 // encode bitmap to binary data
 exports.encode = function(bitmap) {
   var buflen = lengthMap.opt + bitmap.data.length * lengthMap.data;
-  var dv = allocate(buflen);
-  dv.setInt8(0, bitmap.opt);
+  var buf = allocate(buflen);
+  buf[0] = bitmap.opt;
   bitmap.data.forEach(function(value, i) {
-    dv.setUint16(i * lengthMap.data + lengthMap.opt, Math.abs(value));
+    buf.setUint(value, i * lengthMap.data + lengthMap.opt, 2);
   });
-  return dv.buffer.slice(dv.byteOffset, dv.byteOffset + buflen);
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buflen);
 };
 
 // decode binary data to bitmap
 exports.decode = function(buf) {
-  var dv;
   var bitmap = {};
 
   // buf may be node buffer
-  if (ArrayBuffer.isView(buf)) {
-    dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  } else {
-    dv = new DataView(buf);
+  if (!ArrayBuffer.isView(buf)) {
+    buf = new Uint8Array(buf);
   }
 
-  bitmap.opt = dv.getUint8(0);
+  bitmap.opt = buf[0];
   bitmap.data = [];
   for (var i = lengthMap.opt, max = buf.byteLength - lengthMap.opt; i < max; i += lengthMap.data) {
-    bitmap.data.push(dv.getUint16(i));
+    bitmap.data.push(buf.getUint(i, 2));
   }
   return bitmap;
 };
