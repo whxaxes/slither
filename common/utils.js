@@ -48,17 +48,27 @@ exports.arrayToObj = function(arr, type) {
   return obj;
 };
 
+// encode bitmap to binary data
 exports.encode = function(bitmap) {
   var buflen = lengthMap.opt + bitmap.data.length * lengthMap.data;
-  var buf = new ArrayBuffer(buflen);
-  var dv = new DataView(buf, 0, buflen);
-  dv.setInt8(0, bitmap.opt);
+  var buf, byteOffset = 0;
+  if (Buffer) {
+    // if Buffer is exist, create Uint8Array by Buffer.alloc
+    var fastbuf = Buffer.alloc(buflen);
+    buf = fastbuf.buffer;
+    byteOffset = fastbuf.byteOffset;
+  } else {
+    buf = new ArrayBuffer(buflen);
+  }
+  var dv = new DataView(buf, byteOffset, buflen);
+  dv.setInt8(byteOffset, bitmap.opt);
   bitmap.data.forEach((value, i) => {
-    dv.setUint16(i * lengthMap.data + lengthMap.opt, Math.abs(value));
+    dv.setUint16(byteOffset + i * lengthMap.data + lengthMap.opt, Math.abs(value));
   });
   return buf;
 };
 
+// decode binary data to bitmap
 exports.decode = function(buf) {
   var dv;
   var bitmap = {};
