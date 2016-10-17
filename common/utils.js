@@ -81,8 +81,8 @@ var allocate = (function() {
     };
   } else {
     return function(size) {
-      var fastbuf = Buffer.allocate(size).buffer;
-      return new DataView(fastbuf, fastbuf.byteOffset, fastbuf.byteLength);
+      var fastbuf = Buffer.allocate(size);
+      return new DataView(fastbuf.buffer, fastbuf.byteOffset, fastbuf.byteLength);
     };
   }
 })();
