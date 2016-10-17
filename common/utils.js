@@ -71,8 +71,8 @@ var allocate = (function() {
 
     return function(size) {
       if (size < poolSize) {
-        if (size > poolSize - poolOffset) createPool();
-        var dv = createDv(allocPool, poolOffset, poolOffset + size);
+        if (size > (poolSize - poolOffset)) { poolOffset = 0; }
+        var dv = createDv(allocPool, poolOffset, size);
         poolOffset += size;
         return dv;
       } else {
@@ -80,6 +80,7 @@ var allocate = (function() {
       }
     };
   } else {
+    Buffer.poolSize = 1 * 1024 * 1024;
     return function(size) {
       var fastbuf = Buffer.allocate(size);
       return new DataView(fastbuf.buffer, fastbuf.byteOffset, fastbuf.byteLength);
@@ -87,16 +88,15 @@ var allocate = (function() {
   }
 })();
 
-
 // encode bitmap to binary data
 exports.encode = function(bitmap) {
   var buflen = lengthMap.opt + bitmap.data.length * lengthMap.data;
   var dv = allocate(buflen);
-  dv.setInt8(dv.byteOffset, bitmap.opt);
+  dv.setInt8(0, bitmap.opt);
   bitmap.data.forEach(function(value, i) {
-    dv.setUint16(dv.byteOffset + i * lengthMap.data + lengthMap.opt, Math.abs(value));
+    dv.setUint16(i * lengthMap.data + lengthMap.opt, Math.abs(value));
   });
-  return dv.buffer;
+  return dv.buffer.slice(dv.byteOffset, dv.byteOffset + buflen);
 };
 
 // decode binary data to bitmap
@@ -129,3 +129,8 @@ exports.decode = function(buf) {
 // console.log(test);
 
 // console.log(exports.arrayToObj(test, 'snake'));
+
+// console.log(exports.decode(exports.encode({
+//   opt: 1,
+//   data: [2, 3]
+// })));

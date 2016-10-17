@@ -112,6 +112,9 @@ export class ServerSnakeHeader extends SnakeBase {
       this.x = this.aimx;
       this.y = this.aimy;
       this.stop();
+    } else {
+      this.x += this.vx;
+      this.y += this.vy;
     }
   }
 
