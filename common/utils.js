@@ -54,7 +54,7 @@ exports.encode = function(bitmap) {
   var buf, byteOffset = 0;
   if (Buffer) {
     // if Buffer is exist, create Uint8Array by Buffer.alloc
-    var fastbuf = Buffer.alloc(buflen);
+    var fastbuf = Buffer.allocate(buflen);
     buf = fastbuf.buffer;
     byteOffset = fastbuf.byteOffset;
   } else {
