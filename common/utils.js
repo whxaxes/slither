@@ -73,7 +73,7 @@ var allocate = (function() {
       if (size < poolSize) {
         if (size > poolSize - poolOffset) createPool();
         var dv = createDv(allocPool, poolOffset, poolOffset + size);
-        poolSize += size;
+        poolOffset += size;
         return dv;
       } else {
         return createDv(createArrayBuffer(size), 0, size);
