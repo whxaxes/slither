@@ -3,11 +3,11 @@ import Stats = require('stats.js');
 import { Base } from './element/Base';
 import { GameMap } from './framework/GameMap';
 import { Observer } from './framework/Observer';
+import { SnakeHeader, ServerSnakeHeader } from './element/SnakeHeader';
 import { Snake } from './element/Snake';
 import { Food } from './element/Food';
 import * as config from '../common/config';
-import * as structs from '../common/structs';
-import * as utils from './utils';
+import * as utils from '../common/utils';
 
 const raf: (callback: FrameRequestCallback) => {} = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
 const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('cas');
@@ -20,19 +20,29 @@ if (module.hot) {
 // local ip address
 let localIp: string = (<HTMLInputElement>document.getElementById('ip')).value;
 let isInit: boolean = false;
+// sync data frame count
+const syncFrameCount: number = 5;
 // player id
-let playerId: number;
-// game map
-let gamemap: GameMap;
+let playerId: number | undefined;
 // judge player is an observer or not
 let isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
 // window's width and height
 let vWidth: number = window.innerWidth;
 let vHeight: number = window.innerHeight;
+// game map
+let gamemap: GameMap = new GameMap(canvas, vWidth, vHeight);
 // player object
 let player: Snake | Observer;
 // record mouse coord
 let mouseCoords: { x?: number, y?: number } = {};
+// snakes map
+const snakes: Map<any, any> = new Map();
+// keycode
+const enum KeyCodes {
+  W = 87,
+  S = 83,
+  A = 65
+};
 
 // save food object
 let foods: Array<Food> = [];
@@ -61,9 +71,7 @@ ws.onerror = () => {
   console.log('error');
 };
 
-ws.onclose = () => {
-  console.log('closed');
-
+ws.onclose = (...args: Array<any>) => {
   if (!isInit) {
     const x = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
     const y = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
@@ -73,8 +81,8 @@ ws.onclose = () => {
 
 // receive data
 ws.onmessage = e => {
-  let obj: utils.EncodeData;
-  let data: structs.Struct;
+  let obj: utils.Bitmap;
+  let data: utils.Struct;
   const buf = e.data;
 
   if (buf instanceof ArrayBuffer) {
@@ -85,9 +93,37 @@ ws.onmessage = e => {
 
   switch (obj.opt) {
     case config.CMD_INIT_ACK:
-      data = structs.arrayToObj(obj.data, 'snake');
+      data = utils.arrayToObj(obj.data, 'snake');
       playerId = data.id;
       initGame(data.x, data.y);
+      break;
+
+    case config.CMD_SYNC_OTHER_COORD:
+      if (!isInit) {
+        return;
+      }
+
+      let snake: Snake;
+      data = utils.arrayToObj(obj.data, 'snake');
+
+      if (playerId === data.id) {
+        return;
+      } else if (snakes.has(data.id)) {
+        snake = snakes.get(data.id);
+        (<ServerSnakeHeader>snake.header).angle = data.angle * Math.PI / 180;
+        snake.moveTo(data.x, data.y);
+      } else {
+        snakes.set(data.id, snake = new Snake({
+          gamemap,
+          x: data.x,
+          y: data.y,
+          angle: data.angle * Math.PI / 180,
+          size: data.size,
+          fillColor: ['#fff', '#999'],
+          length: data.bodys.length / 2,
+        }, true, data.bodys));
+      }
+
       break;
   }
 };
@@ -98,15 +134,13 @@ ws.onmessage = e => {
 function initGame(x: number, y: number): void {
   isInit = true;
 
-  gamemap = new GameMap(canvas, vWidth, vHeight);
-
   // create player
   if (isObserver) {
-    player = new Observer(gamemap, x, y);
+    player = new Observer(gamemap, gamemap.width / 2, gamemap.height / 2);
   } else {
     player = new Snake({
       gamemap, x, y,
-      size: 40,
+      size: 30,
       length: 40,
       angle: Math.random() * 2 * Math.PI,
       fillColor: ['#fff', '#333'],
@@ -114,16 +148,16 @@ function initGame(x: number, y: number): void {
     }, false);
   }
 
-  for (let i = 0; i < 100; i++) {
-    const point = ~~(Math.random() * 30 + 50);
-    const size = ~~(point / 3);
+  // for (let i = 0; i < 100; i++) {
+  //   const point = ~~(Math.random() * 30 + 50);
+  //   const size = ~~(point / 3);
 
-    foods.push(new Food({
-      gamemap, size, point,
-      x: ~~(Math.random() * (gamemap.width - 2 * size) + size),
-      y: ~~(Math.random() * (gamemap.height - 2 * size) + size)
-    }));
-  }
+  //   foods.push(new Food({
+  //     gamemap, size, point,
+  //     x: ~~(Math.random() * (gamemap.width - 2 * size) + size),
+  //     y: ~~(Math.random() * (gamemap.height - 2 * size) + size)
+  //   }));
+  // }
 
   binding();
   animate();
@@ -159,6 +193,10 @@ function animate(): void {
     gamemap.update(player, () => {
       player.update();
 
+      snakes.forEach(snake => {
+        snake.update();
+      });
+
       if (player instanceof Snake) {
         // 渲染食物, 以及检测食物与蛇头的碰撞
         foods.forEach(food => {
@@ -169,8 +207,8 @@ function animate(): void {
             foods.splice(foods.indexOf(food), 1);
 
             // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-            const newscale = gamemap.scale + added / ((<Snake>player).header.width * 3);
-            if (newscale < 1.6) {
+            const newscale = gamemap.scale + added / ((<Snake>player).header.width * 4);
+            if (newscale < 1.4) {
               gamemap.setToScale(newscale);
             }
 
@@ -178,7 +216,6 @@ function animate(): void {
           }
         });
       }
-
     });
 
     // if (mouseCoords.x) {
@@ -187,6 +224,30 @@ function animate(): void {
     //   gamemap.ctx.lineTo(mouseCoords.x, mouseCoords.y);
     //   gamemap.ctx.stroke();
     // }
+
+    if (!(player instanceof Observer) && playerId) {
+      framecount++;
+
+      // sync data every seconds
+      if (framecount > config.SYNC_PER_FRAME) {
+        const bodys: Array<number> = [];
+        (<Snake>player).bodys.forEach(body => {
+          bodys.push(body.x, body.y);
+        });
+
+        sendData({
+          opt: config.CMD_SYNC_MAIN_COORD,
+          data: utils.objToArray({
+            id: playerId,
+            angle: ((<Snake>player).header.angle * (180 / Math.PI)) % 360,
+            size: (<Snake>player).header.width,
+            x: (<Snake>player).header.x,
+            y: (<Snake>player).header.y,
+            bodys
+          }, 'snake')
+        }, true);
+      }
+    }
   }
 
   stats.end();
@@ -196,7 +257,7 @@ function animate(): void {
 /**
  * send data
  */
-function sendData(data: utils.EncodeData, isBuffer: boolean): void {
+function sendData(data: utils.Bitmap, isBuffer: boolean): void {
   let buf: ArrayBuffer | string;
   if (isBuffer) {
     buf = utils.encode(data);
@@ -211,20 +272,25 @@ function sendData(data: utils.EncodeData, isBuffer: boolean): void {
  * event binding
  */
 function binding() {
-  if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
-    window.addEventListener('touchstart', e => {
-      e.preventDefault();
+  // finger|mouse move event 
+  function mousemove(e: MouseEvent | TouchEvent) {
+    e.preventDefault();
+    if (e instanceof TouchEvent) {
       mouseCoords.x = (<TouchEvent>e).touches[0].pageX;
       mouseCoords.y = (<TouchEvent>e).touches[0].pageY;
-      player.moveTo(mouseCoords.x, mouseCoords.y);
-    });
+    } else {
+      const evt: MouseEvent = e || <MouseEvent>window.event;
+      mouseCoords.x = evt.clientX;
+      mouseCoords.y = evt.clientY;
+    }
+    const nx = gamemap.relative(mouseCoords.x) + gamemap.view.x;
+    const ny = gamemap.relative(mouseCoords.y) + gamemap.view.y;
+    player.moveTo(nx, ny);
+  }
 
-    window.addEventListener('touchmove', e => {
-      e.preventDefault();
-      mouseCoords.x = (<TouchEvent>e).touches[0].pageX;
-      mouseCoords.y = (<TouchEvent>e).touches[0].pageY;
-      player.moveTo(mouseCoords.x, mouseCoords.y);
-    });
+  if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {
+    window.addEventListener('touchstart', mousemove);
+    window.addEventListener('touchmove', mousemove);
 
     if (player instanceof Observer) {
       window.addEventListener('touchend', e => {
@@ -233,39 +299,31 @@ function binding() {
     }
   } else {
     // change snake's direction when mouse moving 
-    window.addEventListener('mousemove', e => {
-      const evt: MouseEvent = e || <MouseEvent>window.event;
-      mouseCoords.x = evt.clientX;
-      mouseCoords.y = evt.clientY;
-      player.moveTo(mouseCoords.x, mouseCoords.y);
-    });
+    window.addEventListener('mousemove', mousemove);
 
     if (player instanceof Snake) {
+      const pl = <Snake>player;
       // speedup
       window.addEventListener('mousedown', () => {
-        (<Snake>player).speedUp();
+        pl.speedUp();
       });
 
       // speeddown
       window.addEventListener('mouseup', () => {
-        (<Snake>player).speedDown();
+        pl.speedDown();
       });
     } else {
       window.addEventListener('keyup', e => {
         switch (e.keyCode) {
-          case 87:
-            gamemap.setToScale(
-              gamemap.scale + 0.2
-            );
+          case KeyCodes.W:
+            gamemap.setToScale(gamemap.scale + 0.2);
             break;
 
-          case 83:
-            gamemap.setToScale(
-              gamemap.scale - 0.2
-            );
+          case KeyCodes.S:
+            gamemap.setToScale(gamemap.scale - 0.2);
             break;
 
-          case 65:
+          case KeyCodes.A:
             gamemap.setToScale(1);
             break;
 

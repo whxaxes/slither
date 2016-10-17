@@ -12,3 +12,4 @@ export const BASE_ANGLE: number;
 export const MAP_RECT_WIDTH: number;
 export const MAP_RECT_HEIGHT: number;
 export const SNAKE_IMG_SIZE: number;
+export const SYNC_PER_FRAME: number;

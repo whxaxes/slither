@@ -1,6 +1,7 @@
 import { SnakeBase, SnakeBaseOptions } from './SnakeBase';
-import { BASE_ANGLE } from '../../common/config';
+import { BASE_ANGLE, SYNC_PER_FRAME } from '../../common/config';
 
+// control by player
 export class SnakeHeader extends SnakeBase {
   private toAngle: number;
 
@@ -11,9 +12,22 @@ export class SnakeHeader extends SnakeBase {
   }
 
   /**
-   * 转向某个角度
+   * 往坐标点移动
    */
-  directTo(angle: number): void {
+  moveTo(nx: number, ny: number): void {
+    const x: number = nx - this.x;
+    const y: number = this.y - ny;
+    let angle: number = Math.atan(Math.abs(x / y));
+
+    // 计算角度, 角度值为 0-360
+    if (x > 0 && y < 0) {
+      angle = Math.PI - angle;
+    } else if (x < 0 && y < 0) {
+      angle = Math.PI + angle;
+    } else if (x < 0 && y > 0) {
+      angle = Math.PI * 2 - angle;
+    }
+
     // 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
     const oldAngle: number = Math.abs(this.toAngle % (Math.PI * 2));
 
@@ -78,4 +92,28 @@ export class SnakeHeader extends SnakeBase {
       this.angle += Math.sign(angleDistance) * turnSpeed;
     }
   }
+}
+
+// control by server(the other player)
+export class ServerSnakeHeader extends SnakeBase {
+  private aimx: number;
+  private aimy: number;
+
+  moveTo(nx: number, ny: number) {
+    this.aimx = nx;
+    this.aimy = ny;
+    this.vx = (nx - this.x) / SYNC_PER_FRAME;
+    this.vy = (ny - this.y) / SYNC_PER_FRAME;
+    this.continue();
+  }
+
+  move() {
+    if (Math.abs(this.aimx - this.x) < 1) {
+      this.x = this.aimx;
+      this.y = this.aimy;
+      this.stop();
+    }
+  }
+
+  velocity() { }
 }

@@ -86,12 +86,14 @@ export class GameMap extends EventEmitter {
    */
   update(player: ViewTracker, callback: () => void): void {
     if (this.toScale && this.scale !== this.toScale) {
-      const scaleDis = this.toScale - this.scale;
-      if (Math.abs(scaleDis) < 0.01) {
-        this.setScale(this.toScale);
-      } else {
-        this.setScale(this.scale + (this.toScale - this.scale) * 0.1);
-      }
+      // const scaleDis = this.toScale - this.scale;
+      // if (Math.abs(scaleDis) < 0.01) {
+      //   this.setScale(this.toScale);
+      // } else {
+      //   this.setScale(this.scale + (this.toScale - this.scale) * 0.1);
+      // }
+
+      this.setScale(this.toScale);
     }
 
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);

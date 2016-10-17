@@ -1,6 +1,6 @@
 import { SnakeBaseOptions } from './SnakeBase';
 import { SnakeBody } from './SnakeBody';
-import { SnakeHeader } from './SnakeHeader';
+import { SnakeHeader, ServerSnakeHeader } from './SnakeHeader';
 import { Food } from './Food';
 import { SPEED } from '../../common/config';
 import { GameMap } from '../framework/GameMap';
@@ -107,7 +107,7 @@ interface SnakeOptions extends SnakeBaseOptions {
 
 export class Snake implements ObserverInterface {
   gamemap: GameMap;
-  header: SnakeHeader;
+  header: SnakeHeader | ServerSnakeHeader;
   bodys: Array<SnakeBody> = [];
   bodyImages: Array<HTMLCanvasElement> = [];
   colorIndex: number = 0;
@@ -116,7 +116,8 @@ export class Snake implements ObserverInterface {
 
   constructor(
     options: SnakeOptions,
-    public isCustom: boolean
+    public serverControl: boolean,
+    bodyCoords?: Array<number>
   ) {
     const imgWidth: number = 60;
     const imgHeight: number = 60;
@@ -127,20 +128,31 @@ export class Snake implements ObserverInterface {
     this.gamemap = options.gamemap;
 
     // 创建蛇头实例
-    this.header = new SnakeHeader(Object.assign(options, {
+    const headerOptions: SnakeBaseOptions = Object.assign(options, {
       img: snakeImageStore.getImage(1, imgWidth, imgHeight, fillColors[0], strokeColor)
-    }));
+    });
+
+    if (this.serverControl) {
+      this.header = new ServerSnakeHeader(headerOptions);
+    } else {
+      this.header = new SnakeHeader(headerOptions);
+    }
 
     // 创建身躯实例，生成花纹
     this.bodyImages = fillColors.map(color => {
       return snakeImageStore.getImage(0, imgWidth, imgHeight, color, strokeColor);
     });
-    const len: number = this.bodyImages.length;
     let image: HTMLCanvasElement;
+    let body: SnakeBody;
     for (let i = 0; i < options.length || 0; i++) {
       if (!image || (i + 1) % 5 === 0) {
-        image = this.bodyImages[this.colorIndex % len];
+        image = this.bodyImages[this.colorIndex % this.bodyImages.length];
         this.colorIndex++;
+      }
+
+      if (this.serverControl && bodyCoords && bodyCoords.length) {
+        options.x = bodyCoords[i * 2];
+        options.y = bodyCoords[i * 2 + 1];
       }
 
       this.bodys.push(new SnakeBody(Object.assign(options, {
@@ -168,32 +180,13 @@ export class Snake implements ObserverInterface {
    * 往坐标点移动
    */
   moveTo(nx: number, ny: number) {
-    const x: number = nx - this.header.paintX;
-    const y: number = this.header.paintY - ny;
-    let angle: number = Math.atan(Math.abs(x / y));
-
-    // 计算角度, 角度值为 0-360
-    if (x > 0 && y < 0) {
-      angle = Math.PI - angle;
-    } else if (x < 0 && y < 0) {
-      angle = Math.PI + angle;
-    } else if (x < 0 && y > 0) {
-      angle = Math.PI * 2 - angle;
-    }
-
-    this.header.directTo(angle);
+    this.header.moveTo(nx, ny);
   }
 
-  createBody() {
-
-  }
-
-  /**加速 */
   speedUp(): void {
     this.isSpeedUp = true;
   }
 
-  /**减速 */
   speedDown(): void {
     this.isSpeedUp = false;
   }
@@ -210,7 +203,7 @@ export class Snake implements ObserverInterface {
     this.point += food.point;
 
     // 增加分数引起虫子体积增大
-    const added = food.point / 50;
+    const added = food.point / 80;
     this.header.setSize(this.header.width + added);
     this.bodys.forEach(body => { body.setSize(body.width + added); });
 
@@ -242,14 +235,14 @@ export class Snake implements ObserverInterface {
     // 不让蛇走出地图外
     this.gamemap.limit(this.header);
 
-    // 通过update两次来达到加速效果
-    if (this.isSpeedUp) {
-      for (let i = this.bodys.length - 1; i >= 0; i--) {
-        this.bodys[i].update();
-      }
+    // // 通过update两次来达到加速效果
+    // if (this.isSpeedUp) {
+    //   for (let i = this.bodys.length - 1; i >= 0; i--) {
+    //     this.bodys[i].update();
+    //   }
 
-      this.header.update();
-    }
+    //   this.header.update();
+    // }
 
     // 渲染蛇头蛇身
     for (let i = this.bodys.length - 1; i >= 0; i--) {

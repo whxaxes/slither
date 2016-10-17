@@ -119,7 +119,7 @@ export abstract class SnakeBase extends Base {
     this.height = size;
 
     // update movement queue length
-    this.movementQueueLen = ~~(0.5 + size * 0.15 / this.speed);
+    this.movementQueueLen = ~~(0.5 + size * 0.25 / this.speed);
   }
 
   /**

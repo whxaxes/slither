@@ -28,8 +28,8 @@ export class Observer implements ObserverInterface {
   }
 
   moveTo(nx: number, ny: number): void {
-    const xc: number = nx - this.gamemap.view.relativeX(this.x);
-    const yc: number = ny - this.gamemap.view.relativeY(this.y);
+    const xc: number = nx - this.x;
+    const yc: number = ny - this.y;
     const hyp: number = Math.sqrt(xc * xc + yc * yc);
     const ratio = 2 * SPEED * this.gamemap.scale / hyp;
     this.vx = xc * ratio;
