@@ -2,6 +2,7 @@ export const CMD_INIT: number;
 export const CMD_INIT_ACK: number;
 export const CMD_SYNC_MAIN_COORD: number;
 export const CMD_SYNC_OTHER_COORD: number;
+export const CMD_LOSE_CONNECT: number;
 export const port: number;
 export const devPort: number;
 export const socketPort: number;

@@ -31,7 +31,14 @@ module.exports = {
 
   module: {
     loaders: [{
+      test: /\.js$/,
+      include: path.resolve('./common'),
+      loaders: [
+        'babel-loader?presets=es2015'
+      ]
+    }, {
       test: /\.ts$/,
+      include: path.resolve('./src'),
       loaders: [
         'awesome-typescript-loader'
       ]

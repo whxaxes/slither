@@ -1,8 +1,5 @@
 {
-  "script": "./server.js",
-  "watch": ["./server.js", "./server"],
-  "ignore_watch" : ["node_modules", "src"],
-  "watch_options": {
-    "followSymlinks": false
-  }
+  "name": "slither",
+  "cwd": "./server",
+  "script": "server.js"
 }

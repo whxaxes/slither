@@ -81,19 +81,19 @@ ws.onclose = (...args: Array<any>) => {
 
 // receive data
 ws.onmessage = e => {
-  let obj: utils.Bitmap;
+  let bitmap: utils.Bitmap;
   let data: utils.Struct;
   const buf = e.data;
 
   if (buf instanceof ArrayBuffer) {
-    obj = utils.decode(buf);
+    bitmap = utils.decode(buf);
   } else {
-    obj = JSON.parse(buf);
+    bitmap = JSON.parse(buf);
   }
 
-  switch (obj.opt) {
+  switch (bitmap.opt) {
     case config.CMD_INIT_ACK:
-      data = utils.arrayToObj(obj.data, 'snake');
+      data = utils.arrayToObj(bitmap.data, 'snake');
       playerId = data.id;
       initGame(data.x, data.y);
       break;
@@ -104,7 +104,7 @@ ws.onmessage = e => {
       }
 
       let snake: Snake;
-      data = utils.arrayToObj(obj.data, 'snake');
+      data = utils.arrayToObj(bitmap.data, 'snake');
 
       if (playerId === data.id) {
         return;
@@ -125,6 +125,16 @@ ws.onmessage = e => {
       }
 
       break;
+
+    case config.CMD_LOSE_CONNECT:
+      const id = bitmap.data[0];
+
+      if (snakes.has(id)) {
+        snakes.delete(id);
+      }
+      break;
+
+    default: break;
   }
 };
 

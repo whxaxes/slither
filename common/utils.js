@@ -1,24 +1,24 @@
 'use strict';
 
-var structs = {
+const structs = {
   snake: ['id', 'angle', 'size', 'x', 'y', 'bodys'],
   food: ['id', 'coords']
 };
 
-var lengthMap = {
+const lengthMap = {
   opt: 1,
   data: 2
 };
 
-exports.objToArray = function(obj, type) {
-  var struct = structs[type];
-  var arr = [];
+exports.objToArray = (obj, type) => {
+  let arr = [];
+  let struct = structs[type];
 
   if (!struct) {
     return arr;
   }
 
-  struct.forEach(function(key, i) {
+  struct.forEach((key, i) => {
     if (i === struct.length - 1) {
       arr = arr.concat(obj[key] || []);
     } else {
@@ -29,15 +29,15 @@ exports.objToArray = function(obj, type) {
   return arr;
 };
 
-exports.arrayToObj = function(arr, type) {
-  var struct = structs[type];
-  var obj = {};
+exports.arrayToObj = (arr, type) => {
+  const struct = structs[type];
+  const obj = {};
 
   if (!struct) {
     return obj;
   }
 
-  struct.forEach(function(key, i) {
+  struct.forEach((key, i) => {
     if (i === struct.length - 1) {
       obj[key] = arr.slice(i);
     } else {
@@ -52,21 +52,20 @@ Uint8Array.prototype.setUint = function(value, offset, byteLength) {
   value = +value;
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
-  var i = byteLength - 1;
-  var mul = 1;
+  let i = byteLength - 1;
+  let mul = 1;
   this[offset + i] = value;
   while (--i >= 0 && (mul *= 0x100)) {
     this[offset + i] = (value / mul) >>> 0;
   }
-
   return offset + byteLength;
 };
 
 Uint8Array.prototype.getUint = function(offset, byteLength) {
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
-  var val = this[offset + --byteLength];
-  var mul = 1;
+  let val = this[offset + --byteLength];
+  let mul = 1;
   while (byteLength > 0 && (mul *= 0x100)) {
     val += this[offset + --byteLength] * mul;
   }
@@ -74,58 +73,60 @@ Uint8Array.prototype.getUint = function(offset, byteLength) {
 };
 
 // allocate buffer and return a dataview
-var allocate = (function() {
+const allocate = (() => {
   if (!Buffer || !Buffer.allocate) {
-    var poolSize = 8 * 1024;
-    var allocPool, poolOffset;
+    const poolSize = 24 * 1024;
+    let allocPool, poolOffset;
 
-    var createArrayBuffer = function(size) {
+    const createArrayBuffer = (size) => {
       return new ArrayBuffer(size);
     };
 
-    var createPool = function() {
+    const createPool = () => {
       allocPool = createArrayBuffer(poolSize);
       poolOffset = 0;
     };
 
-    var createBuf = function(arraybuffer, offset, length) {
+    const createBuf = (arraybuffer, offset, length) => {
       return new Uint8Array(arraybuffer, offset, length);
     };
 
     createPool();
 
-    return function(size) {
+    return (size) => {
       if (size < poolSize) {
-        if (size > (poolSize - poolOffset)) { poolOffset = 0; }
-        var dv = createBuf(allocPool, poolOffset, size);
+        if (size > (poolSize - poolOffset)) {
+          poolOffset = 0;
+        }
+        const buf = createBuf(allocPool, poolOffset, size);
         poolOffset += size;
-        return dv;
+        return buf;
       } else {
         return createBuf(createArrayBuffer(size), 0, size);
       }
     };
   } else {
     Buffer.poolSize = 100 * 1024;
-    return function(size) {
+    return (size) => {
       return Buffer.allocate(size);
     };
   }
 })();
 
 // encode bitmap to binary data
-exports.encode = function(bitmap) {
-  var buflen = lengthMap.opt + bitmap.data.length * lengthMap.data;
-  var buf = allocate(buflen);
+exports.encode = (bitmap) => {
+  const buflen = lengthMap.opt + bitmap.data.length * lengthMap.data;
+  const buf = allocate(buflen);
   buf[0] = bitmap.opt;
-  bitmap.data.forEach(function(value, i) {
-    buf.setUint(value, i * lengthMap.data + lengthMap.opt, 2);
+  bitmap.data.forEach((value, i) => {
+    buf.setUint(value, i * lengthMap.data + lengthMap.opt, lengthMap.data);
   });
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buflen);
 };
 
 // decode binary data to bitmap
-exports.decode = function(buf) {
-  var bitmap = {};
+exports.decode = (buf) => {
+  const bitmap = {};
 
   // buf may be node buffer
   if (!ArrayBuffer.isView(buf)) {
@@ -134,8 +135,8 @@ exports.decode = function(buf) {
 
   bitmap.opt = buf[0];
   bitmap.data = [];
-  for (var i = lengthMap.opt, max = buf.byteLength - lengthMap.opt; i < max; i += lengthMap.data) {
-    bitmap.data.push(buf.getUint(i, 2));
+  for (let i = lengthMap.opt, max = buf.byteLength - lengthMap.opt; i < max; i += lengthMap.data) {
+    bitmap.data.push(buf.getUint(i, lengthMap.data));
   }
   return bitmap;
 };

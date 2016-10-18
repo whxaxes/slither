@@ -8,7 +8,8 @@
 exports.CMD_INIT = 100;                     // 初始化命令
 exports.CMD_INIT_ACK = 101;                 // 初始化命令响应
 exports.CMD_SYNC_MAIN_COORD = 102;          // 同步坐标
-exports.CMD_SYNC_OTHER_COORD = 103;
+exports.CMD_SYNC_OTHER_COORD = 103;         // 同步坐标
+exports.CMD_LOSE_CONNECT = 104;             // 失去连接
 
 exports.port = 9999;                        // 服务端口
 exports.devPort = exports.port - 1;         // 开发服务端口

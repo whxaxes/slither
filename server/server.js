@@ -1,10 +1,9 @@
 'use strict';
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
-const config = require('./common/config');
-const utils = require('./common/utils');
+const config = require('../common/config');
+const utils = require('../common/utils');
 const wss = new WebSocketServer({ port: config.socketPort });
-
 let idKey = 0;
 
 console.log(`listen port ${config.socketPort}`);
@@ -12,9 +11,27 @@ console.log(`listen port ${config.socketPort}`);
 wss.on('connection', ws => {
   console.log('socket connected');
   ws.binaryType = 'arraybuffer';
+  ws.elements = new Map();
 
   ws.on('error', () => {
     console.log('error');
+  });
+
+  ws.on('close', () => {
+    console.log('disconnect!');
+
+    if (ws.playerId) {
+      wss.broadcast(utils.encode({
+        opt: config.CMD_LOSE_CONNECT,
+        data: [ws.playerId]
+      }));
+
+      wss.clients.forEach(client => {
+        if (client.elements.has(ws.playerId)) {
+          client.elements.delete(ws.playerId);
+        }
+      });
+    }
   });
 
   ws.on('message', buf => {
@@ -55,28 +72,30 @@ wss.on('connection', ws => {
         ws.bodys = data.bodys;
 
         wss.clients.forEach((client) => {
-          if (client !== ws) {
-            client.saves = client.saves || {};
-
-            if (!client.saves[client.playerId]) {
-              client.saves[client.playerId] = true;
-              client.send(utils.encode({
-                opt: config.CMD_SYNC_OTHER_COORD,
-                data: obj.data
-              }));
-            } else {
-              client.send(utils.encode({
-                opt: config.CMD_SYNC_OTHER_COORD,
-                data: utils.objToArray({
-                  id: ws.playerId,
-                  x: ws.snakeX,
-                  y: ws.snakeY,
-                  angle: ws.angle
-                }, 'snake')
-              }));
-            }
-
+          if (client === ws) {
+            return;
           }
+
+          let data;
+
+          // 如果client.elements无此元素，则发送全部坐标
+          // 否则只发送header坐标
+          if (!client.elements.has(ws.playerId)) {
+            client.elements.set(ws.playerId, ws);
+            data = obj.data;
+          } else {
+            data = utils.objToArray({
+              id: ws.playerId,
+              x: ws.snakeX,
+              y: ws.snakeY,
+              angle: ws.angle
+            }, 'snake');
+          }
+
+          client.send(utils.encode({
+            opt: config.CMD_SYNC_OTHER_COORD,
+            data
+          }));
         });
         break;
 
