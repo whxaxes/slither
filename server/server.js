@@ -12,7 +12,7 @@ wss.on('connection', ws => {
   console.log('socket connected');
   ws.binaryType = 'arraybuffer';
   ws.elements = new Map();
-
+  
   ws.on('error', () => {
     console.log('error');
   });

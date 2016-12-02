@@ -11,15 +11,11 @@ export class SnakeBody extends SnakeBase {
   }
 
   move(): void {
-    if (this.tracer.movementQueue.length >= this.tracer.movementQueueLen) {
-      this.updateMovement(
-        this.tracer.movementQueue.shift()
+    if (this.tracer && this.tracer.movementQueue.length >= this.tracer.movementQueueLen) {
+      const movement = this.tracer.movementQueue.shift();
+      Object.keys(movement).forEach(
+        key => this[key] = movement[key]
       );
     }
   }
-
-  /**
-   * 根据目标点, 计算速度
-   */
-  velocity(): void { }
 }

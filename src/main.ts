@@ -26,6 +26,7 @@ const syncFrameCount: number = 5;
 let playerId: number | undefined;
 // judge player is an observer or not
 let isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
+let isStatic: boolean = window.location.href.indexOf('static=true') >= 0;
 // window's width and height
 let vWidth: number = window.innerWidth;
 let vHeight: number = window.innerHeight;
@@ -295,7 +296,10 @@ function binding() {
     }
     const nx = gamemap.relative(mouseCoords.x) + gamemap.view.x;
     const ny = gamemap.relative(mouseCoords.y) + gamemap.view.y;
-    player.moveTo(nx, ny);
+
+    if (!isObserver || (isObserver && !isStatic)) {
+      player.moveTo(nx, ny);
+    }
   }
 
   if (navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)) {

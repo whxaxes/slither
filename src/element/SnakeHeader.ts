@@ -9,6 +9,7 @@ export class SnakeHeader extends SnakeBase {
     super(options);
 
     this.toAngle = this.angle;
+    this.velocity();
   }
 
   /**
@@ -117,6 +118,4 @@ export class ServerSnakeHeader extends SnakeBase {
       this.y += this.vy;
     }
   }
-
-  velocity() { }
 }

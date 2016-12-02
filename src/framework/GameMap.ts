@@ -1,21 +1,19 @@
 import { EventEmitter } from 'eventemitter3';
+import { View, ViewTracker } from './View';
+import { SmallMap } from './SmallMap';
 import { MAP_WIDTH, MAP_HEIGHT, MAP_RECT_WIDTH, MAP_RECT_HEIGHT } from '../../common/config';
-
-interface ViewTracker {
-  x: number;
-  y: number;
-}
 
 // Map class
 export class GameMap extends EventEmitter {
   ctx: CanvasRenderingContext2D;
   view: View;
+  smallmap: SmallMap;
   readonly width: number = MAP_WIDTH;
   readonly height: number = MAP_HEIGHT;
-  private paintBlockWidth: number;
-  private paintBlockHeight: number;
-  private paintWidth: number;
-  private paintHeight: number;
+  paintWidth: number;
+  paintHeight: number;
+  // 地图瓦片
+  private tileImage: HTMLCanvasElement = document.createElement('canvas');
   private viewWidth: number;
   private viewHeight: number;
   private toScale: number;
@@ -32,14 +30,16 @@ export class GameMap extends EventEmitter {
     this.ctx = this.canvas.getContext('2d');
     this.paintSizeReset();
     this.view = new View(this, vwidth, vheight);
+    this.smallmap = new SmallMap(this, 30, 50);
+    this.createTile();
   }
 
   /**
    * 绘制参数变更
    */
   private paintSizeReset(): void {
-    this.paintBlockWidth = this.relative(MAP_RECT_WIDTH);
-    this.paintBlockHeight = this.relative(MAP_RECT_HEIGHT);
+    this.tileImage.width = this.relative(this.tileImage.width);
+    this.tileImage.height = this.relative(this.tileImage.height);
     this.paintWidth = this.relative(this.width);
     this.paintHeight = this.relative(this.height);
   }
@@ -100,7 +100,7 @@ export class GameMap extends EventEmitter {
     this.view.track(player);
     this.render();
     callback();
-    this.renderSmallMap();
+    this.smallmap.render();
   }
 
   /**
@@ -128,30 +128,22 @@ export class GameMap extends EventEmitter {
   render(): void {
     const view = this.view;
     this.ctx.save();
-    const beginX = (view.x < 0) ? -view.x : (-view.x % this.paintBlockWidth);
-    const beginY = (view.y < 0) ? -view.y : (-view.y % this.paintBlockHeight);
+    const beginX = (view.x < 0) ? -view.x : (-view.x % this.tileImage.width);
+    const beginY = (view.y < 0) ? -view.y : (-view.y % this.tileImage.height);
     const endX = (view.x + view.width > this.paintWidth)
       ? (this.paintWidth - view.x)
-      : (beginX + view.width + this.paintBlockWidth);
+      : (beginX + view.width + this.tileImage.width);
     const endY = (view.y + view.height > this.paintHeight)
       ? (this.paintHeight - view.y)
-      : (beginY + view.height + this.paintBlockHeight);
+      : (beginY + view.height + this.tileImage.height);
 
-    // 铺底色
-    this.ctx.fillStyle = '#999';
-    this.ctx.fillRect(beginX, beginY, endX - beginX, endY - beginY);
-
-    // 画方格砖
-    this.ctx.lineWidth = 0.5;
-    this.ctx.strokeStyle = '#fff';
-    for (let x = beginX; x <= endX; x += this.paintBlockWidth) {
-      for (let y = beginY; y <= endY; y += this.paintBlockHeight) {
+    for (let x = beginX; x <= endX; x += this.tileImage.width) {
+      for (let y = beginY; y <= endY; y += this.tileImage.height) {
         const cx = endX - x;
         const cy = endY - y;
-        const w = cx < this.paintBlockWidth ? cx : this.paintBlockWidth;
-        const h = cy < this.paintBlockHeight ? cy : this.paintBlockHeight;
-
-        this.ctx.strokeRect(x, y, w, h);
+        const w = cx < this.tileImage.width ? cx : this.tileImage.width;
+        const h = cy < this.tileImage.height ? cy : this.tileImage.height;
+        this.ctx.drawImage(this.tileImage, 0, 0, w, h, x, y, w, h);
       }
     }
 
@@ -159,97 +151,47 @@ export class GameMap extends EventEmitter {
   }
 
   /**
-   * 画小地图
+   * 获取缩略图
    */
-  renderSmallMap(): void {
-    const view = this.view;
-
-    // 小地图外壳, 圆圈
-    const margin = 30;
-    const smapr = 50;
-    const smapx = view.width - smapr - margin;
-    const smapy = view.height - smapr - margin;
-
-    // 地图在小地图中的位置和大小
-    const smrect = 50;
-    const smrectw = this.paintWidth > this.paintHeight
-      ? smrect
-      : (this.paintWidth * smrect / this.paintHeight);
-    const smrecth = this.paintWidth > this.paintHeight
-      ? (this.paintHeight * smrect / this.paintWidth)
-      : smrect;
-    const smrectx = smapx - smrectw / 2;
-    const smrecty = smapy - smrecth / 2;
-
-    // 相对比例
-    const radio = smrectw / this.paintWidth;
-
-    // 视窗在小地图中的位置和大小
-    const smviewx = view.x * radio + smrectx;
-    const smviewy = view.y * radio + smrecty;
-    const smvieww = view.width * radio;
-    const smviewh = view.height * radio;
-
-    this.ctx.save();
-    this.ctx.globalAlpha = 0.8;
-
-    // 画个圈先
-    this.ctx.beginPath();
-    this.ctx.arc(smapx, smapy, smapr, 0, Math.PI * 2);
-    this.ctx.fillStyle = '#000';
-    this.ctx.fill();
-    this.ctx.stroke();
-
-    // 画缩小版地图
-    this.ctx.fillStyle = '#999';
-    this.ctx.fillRect(smrectx, smrecty, smrectw, smrecth);
-
-    // 画视窗
-    this.ctx.strokeStyle = '#fff';
-    this.ctx.strokeRect(smviewx, smviewy, smvieww, smviewh);
-
-    this.ctx.restore();
-
-    // 画蛇蛇位置
-    // this.ctx.fillStyle = '#fff';
-    // this.ctx.fillRect(smviewx + smvieww / 2 - 2, smviewy + smviewh / 2 - 2, 4, 4);
-  }
-}
-
-// 视窗
-class View {
-  constructor(
-    public gamemap: GameMap,
-    public width: number,
-    public height: number,
-    public x: number = 0,
-    public y: number = 0
-  ) {
-    // 监听gamemap的缩放事件
-    this.gamemap.on('scale_changed', () => {
-      this.x = gamemap.relative(this.x);
-      this.y = gamemap.relative(this.y);
-    });
+  getThumbnail(width: number, height: number): HTMLCanvasElement {
+    const image = document.createElement('canvas');
+    image.width = width;
+    image.height = height;
+    this.drawPattern(image, this.width / width);
+    return image;
   }
 
-  track(obj: ViewTracker) {
-    this.x = this.gamemap.relative(obj.x) - this.width / 2;
-    this.y = this.gamemap.relative(obj.y) - this.height / 2;
+  /**
+   * 创建瓦片
+   */
+  private createTile() {
+    this.tileImage.width = MAP_RECT_WIDTH * 10;
+    this.tileImage.height = MAP_RECT_HEIGHT * 10;
+    this.drawPattern(this.tileImage);
   }
 
-  relativeX(x: number) {
-    return this.gamemap.relative(x) - this.x;
-  }
-
-  relativeY(y: number) {
-    return this.gamemap.relative(y) - this.y;
-  }
-
-  relativeW(width: number) {
-    return this.gamemap.relative(width);
-  }
-
-  relativeH(height: number) {
-    return this.gamemap.relative(height);
+  /**
+   * 绘制花纹
+   */
+  private drawPattern(image: HTMLCanvasElement, ratio: number = 1) {
+    const ctx = image.getContext('2d');
+    const colors: Array<string> = ['#ccc', '#999'];
+    let color: string;
+    const width = image.width * ratio;
+    const height = image.height * ratio;
+    const mrw = MAP_RECT_WIDTH / ratio;
+    const mrh = MAP_RECT_HEIGHT / ratio;
+    for (let x = 0, i = 0; x <= width; x += mrw, i++) {
+      color = colors[i % 2];
+      for (let y = 0; y <= height; y += mrh) {
+        const cx = width - x;
+        const cy = height - y;
+        const w = cx < mrw ? cx : mrw;
+        const h = cy < mrh ? cy : mrh;
+        ctx.fillStyle = color;
+        color = (color === colors[0]) ? colors[1] : colors[0];
+        ctx.fillRect(x, y, w, h);
+      }
+    }
   }
 }

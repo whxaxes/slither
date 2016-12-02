@@ -10,7 +10,9 @@ export interface SnakeBaseOptions extends BaseOptions {
 }
 
 // movement class
-class Movements {
+export class Movements {
+  [proName: string]: any;
+
   constructor(
     public x: number,
     public y: number,
@@ -22,6 +24,7 @@ class Movements {
 
 // snake base class
 export abstract class SnakeBase extends Base {
+  [proName: string]: any;
   img: HTMLCanvasElement;
   vx: number = 0;
   vy: number = 0;
@@ -38,15 +41,12 @@ export abstract class SnakeBase extends Base {
   constructor(options: SnakeBaseOptions) {
     super(options);
 
+    this.angle = options.tracer
+      ? options.tracer.angle
+      : (options.angle || 0) + BASE_ANGLE;
     this.img = options.img;
     this.tracer = options.tracer;
-    if (options.tracer) {
-      this.angle = options.tracer.angle;
-    } else {
-      this.angle = (options.angle || 0) + BASE_ANGLE;
-    }
     this.setSize(options.size);
-    this.velocity();
   }
 
   set follower(follower: SnakeBase) {
@@ -61,12 +61,13 @@ export abstract class SnakeBase extends Base {
       const aa = (this.angle - follower.angle) / this.movementQueueLen;
 
       for (let i = 0; i < this.movementQueueLen; i++) {
+        const j = i + 1;
         const movement = new Movements(
-          this.x + xa * (i + 1),
-          this.y + ya * (i + 1),
-          this.vx + vxa * (i + 1),
-          this.vy + vya * (i + 1),
-          this.angle + aa * (i + 1),
+          this.x + xa * j,
+          this.y + ya * j,
+          this.vx + vxa * j,
+          this.vy + vya * j,
+          this.angle + aa * j,
         );
 
         this.movementQueue.push(movement);
@@ -76,17 +77,6 @@ export abstract class SnakeBase extends Base {
 
   get follower(): SnakeBase {
     return this._follower;
-  }
-
-  /**
-   * update movement
-   */
-  updateMovement(movement: Movements) {
-    this.x = movement.x;
-    this.y = movement.y;
-    this.vx = movement.vx;
-    this.vy = movement.vy;
-    this.angle = movement.angle;
   }
 
   /**
@@ -160,6 +150,4 @@ export abstract class SnakeBase extends Base {
   }
 
   abstract move(): void;
-
-  abstract velocity(...args: Array<number>): void;
 }
