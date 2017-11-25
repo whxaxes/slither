@@ -26,4 +26,4 @@ exports.MAP_RECT_HEIGHT = 150;              // 地图方格高度
 
 exports.SNAKE_IMG_SIZE = 60;                // 蛇的图片大小
 
-exports.SYNC_PER_FRAME = 5;
+exports.SYNC_PER_FRAME = 120;

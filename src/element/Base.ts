@@ -1,11 +1,4 @@
-/**
- * Created by wanghx on 4/27/16.
- *
- * base    地图上的元素基础类, 默认为圆
- *
- */
-
-import { GameMap } from '../framework/GameMap';
+import { GameMap } from '~/framework/GameMap';
 
 export interface BaseOptions {
   gamemap: GameMap;
@@ -17,11 +10,16 @@ export interface BaseOptions {
 }
 
 export abstract class Base {
-  gamemap: GameMap;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  public gamemap: GameMap;
+  public x: number;
+  public y: number;
+  public width: number;
+  public height: number;
+  public paintX: number;
+  public paintY: number;
+  public paintWidth: number;
+  public paintHeight: number;
+  public visible: boolean;
 
   constructor(options: BaseOptions) {
     this.gamemap = options.gamemap;
@@ -32,49 +30,36 @@ export abstract class Base {
   }
 
   /**
-   * 绘制时的x坐标, 要根据视窗来计算位置
+   * 基础元素在地图中的更新
+   * @params withoutAction 是否要进行逻辑更新
+   * @params withoutRender 是否要进行渲染
    */
-  get paintX(): number {
-    return this.gamemap.view.relativeX(this.x);
+  public update(withoutAction?: boolean, withoutRender?: boolean): void {
+    this.prepare();
+
+    if (!withoutAction) {
+      this.action();
+    }
+
+    if (!withoutRender) {
+      this.render();
+    }
   }
 
-  /**
-   * 绘制时的y坐标, 要根据视窗来计算位置
-   */
-  get paintY(): number {
-    return this.gamemap.view.relativeY(this.y);
-  }
+  public abstract action(): void;
 
-  /**
-   * 绘制宽度
-   */
-  get paintWidth(): number {
-    return this.gamemap.view.relativeW(this.width);
-  }
+  public abstract render(): void;
 
-  /**
-   * 绘制高度
-   */
-  get paintHeight(): number {
-    return this.gamemap.view.relativeH(this.height);
-  }
-
-  /**
-   * 在视窗内是否可见
-   */
-  get visible(): boolean {
-    const paintX = this.paintX;
-    const paintY = this.paintY;
+  private prepare(): void {
+    this.paintX = this.gamemap.view.relativeX(this.x);
+    this.paintY = this.gamemap.view.relativeY(this.y);
+    this.paintWidth = this.gamemap.view.relativeW(this.width);
+    this.paintHeight = this.gamemap.view.relativeH(this.height);
     const halfWidth = this.paintWidth / 2;
     const halfHeight = this.paintHeight / 2;
-
-    return (paintX + halfWidth > 0)
-      && (paintX - halfWidth < this.gamemap.view.width)
-      && (paintY + halfHeight > 0)
-      && (paintY - halfHeight < this.gamemap.view.height);
+    this.visible = (this.paintX + halfWidth > 0)
+      && (this.paintX - halfWidth < this.gamemap.view.width)
+      && (this.paintY + halfHeight > 0)
+      && (this.paintY - halfHeight < this.gamemap.view.height);
   }
-
-  abstract update(): void;
-
-  abstract render(): void;
 }

@@ -1,16 +1,19 @@
+import * as config from 'common/config';
+import * as utils from 'common/utils';
 import 'es6-shim';
 import Stats = require('stats.js');
-import { Base } from './element/Base';
-import { GameMap } from './framework/GameMap';
-import { Observer } from './framework/Observer';
-import { SnakeHeader, ServerSnakeHeader } from './element/SnakeHeader';
-import { Snake } from './element/Snake';
-import { Food } from './element/Food';
-import * as config from '../common/config';
-import * as utils from '../common/utils';
+import { Base } from '~/element/Base';
+import { Food } from '~/element/Food';
+import { Snake } from '~/element/Snake';
+import { ServerSnakeHeader, SnakeHeader } from '~/element/SnakeHeader';
+import { GameMap } from '~/framework/GameMap';
+import { Observer } from '~/framework/Observer';
 
-const raf: (callback: FrameRequestCallback) => {} = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
-const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('cas');
+const raf: (callback: FrameRequestCallback) => {} =
+  window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+const canvas: HTMLCanvasElement = document.getElementById(
+  'cas',
+) as HTMLCanvasElement;
 
 // hot reload
 if (module.hot) {
@@ -18,35 +21,35 @@ if (module.hot) {
 }
 
 // local ip address
-let localIp: string = (<HTMLInputElement>document.getElementById('ip')).value;
+let localIp: string = (document.getElementById('ip') as HTMLInputElement).value;
 let isInit: boolean = false;
 // sync data frame count
 const syncFrameCount: number = 5;
 // player id
 let playerId: number | undefined;
 // judge player is an observer or not
-let isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
-let isStatic: boolean = window.location.href.indexOf('static=true') >= 0;
+const isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
+const isStatic: boolean = window.location.href.indexOf('static=true') >= 0;
 // window's width and height
-let vWidth: number = window.innerWidth;
-let vHeight: number = window.innerHeight;
+const vWidth: number = window.innerWidth;
+const vHeight: number = window.innerHeight;
 // game map
-let gamemap: GameMap = new GameMap(canvas, vWidth, vHeight);
+const gamemap: GameMap = new GameMap(canvas, vWidth, vHeight);
 // player object
 let player: Snake | Observer;
 // record mouse coord
-let mouseCoords: { x?: number, y?: number } = {};
+const mouseCoords: { x?: number; y?: number } = {};
 // snakes map
 const snakes: Map<any, any> = new Map();
 // keycode
 const enum KeyCodes {
   W = 87,
   S = 83,
-  A = 65
-};
+  A = 65,
+}
 
 // save food object
-let foods: Array<Food> = [];
+const foods: Food[] = [];
 
 // fps state
 const stats: Stats = new Stats();
@@ -62,17 +65,20 @@ ws.binaryType = 'arraybuffer';
 
 // websocket connected
 ws.onopen = () => {
-  sendData({
-    opt: config.CMD_INIT,
-    data: [vWidth, vHeight]
-  }, true);
+  sendData(
+    {
+      opt: config.CMD_INIT,
+      data: [vWidth, vHeight],
+    },
+    true,
+  );
 };
 
 ws.onerror = () => {
   console.log('error');
 };
 
-ws.onclose = (...args: Array<any>) => {
+ws.onclose = (...args: any[]) => {
   if (!isInit) {
     const x = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
     const y = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
@@ -81,7 +87,7 @@ ws.onclose = (...args: Array<any>) => {
 };
 
 // receive data
-ws.onmessage = e => {
+ws.onmessage = (e) => {
   let bitmap: utils.Bitmap;
   let data: utils.Struct;
   const buf = e.data;
@@ -111,18 +117,25 @@ ws.onmessage = e => {
         return;
       } else if (snakes.has(data.id)) {
         snake = snakes.get(data.id);
-        (<ServerSnakeHeader>snake.header).angle = data.angle * Math.PI / 180;
+        (snake.header as ServerSnakeHeader).angle = data.angle * Math.PI / 180;
         snake.moveTo(data.x, data.y);
       } else {
-        snakes.set(data.id, snake = new Snake({
-          gamemap,
-          x: data.x,
-          y: data.y,
-          angle: data.angle * Math.PI / 180,
-          size: data.size,
-          fillColor: ['#fff', '#999'],
-          length: data.bodys.length / 2,
-        }, true, data.bodys));
+        snakes.set(
+          data.id,
+          (snake = new Snake(
+            {
+              gamemap,
+              x: data.x,
+              y: data.y,
+              angle: data.angle * Math.PI / 180,
+              size: data.size,
+              fillColor: '#ccc',
+              length: data.bodys.length / 2,
+            },
+            true,
+            data.bodys,
+          )),
+        );
       }
 
       break;
@@ -135,7 +148,8 @@ ws.onmessage = e => {
       }
       break;
 
-    default: break;
+    default:
+      break;
   }
 };
 
@@ -149,14 +163,19 @@ function initGame(x: number, y: number): void {
   if (isObserver) {
     player = new Observer(gamemap, gamemap.width / 2, gamemap.height / 2);
   } else {
-    player = new Snake({
-      gamemap, x, y,
-      size: 30,
-      length: 40,
-      angle: Math.random() * 2 * Math.PI,
-      fillColor: ['#fff', '#333'],
-      strokeColor: '#333'
-    }, false);
+    player = new Snake(
+      {
+        gamemap,
+        x,
+        y,
+        size: 30,
+        length: 20,
+        angle: Math.random() * 2 * Math.PI,
+        fillColor: '#fff',
+        strokeColor: '#333',
+      },
+      false,
+    );
   }
 
   // for (let i = 0; i < 100; i++) {
@@ -182,8 +201,10 @@ function collision(dom: Base, dom2: Base, isRect?: boolean) {
   const disY = dom.y - dom2.y;
 
   if (isRect) {
-    return Math.abs(disX) < (dom.width + dom2.width) &&
-      Math.abs(disY) < (dom.height + dom2.height);
+    return (
+      Math.abs(disX) < dom.width + dom2.width &&
+      Math.abs(disY) < dom.height + dom2.height
+    );
   }
 
   return Math.hypot(disX, disY) < (dom.width + dom2.width) / 2;
@@ -204,21 +225,22 @@ function animate(): void {
     gamemap.update(player, () => {
       player.update();
 
-      snakes.forEach(snake => {
+      snakes.forEach((snake) => {
         snake.update();
       });
 
       if (player instanceof Snake) {
         // 渲染食物, 以及检测食物与蛇头的碰撞
-        foods.forEach(food => {
+        foods.forEach((food) => {
           food.update();
 
-          if (food.visible && collision((<Snake>player).header, food)) {
-            const added = (<Snake>player).eat(food);
+          if (food.visible && collision((player as Snake).header, food)) {
+            const added = (player as Snake).eat(food);
             foods.splice(foods.indexOf(food), 1);
 
             // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-            const newscale = gamemap.scale + added / ((<Snake>player).header.width * 4);
+            const newscale =
+              gamemap.scale + added / ((player as Snake).header.width * 4);
             if (newscale < 1.4) {
               gamemap.setToScale(newscale);
             }
@@ -239,25 +261,31 @@ function animate(): void {
     if (!(player instanceof Observer) && playerId) {
       framecount++;
 
-      // sync data every seconds
-      if (framecount > config.SYNC_PER_FRAME) {
-        const bodys: Array<number> = [];
-        (<Snake>player).bodys.forEach(body => {
-          bodys.push(body.x, body.y);
-        });
+      // sync data per second
+      // if (framecount > config.SYNC_PER_FRAME) {
+      //   const bodys: Array<number> = [];
+      //   (<Snake>player).bodys.forEach(body => {
+      //     bodys.push(body.x.toFixed(2), body.y.toFixed(2));
+      //   });
 
-        sendData({
-          opt: config.CMD_SYNC_MAIN_COORD,
-          data: utils.objToArray({
-            id: playerId,
-            angle: ((<Snake>player).header.angle * (180 / Math.PI)) % 360,
-            size: (<Snake>player).header.width,
-            x: (<Snake>player).header.x,
-            y: (<Snake>player).header.y,
-            bodys
-          }, 'snake')
-        }, true);
-      }
+      //   sendData(
+      //     {
+      //       opt: config.CMD_SYNC_MAIN_COORD,
+      //       data: utils.objToArray(
+      //         {
+      //           id: playerId,
+      //           angle: ((<Snake>player).header.angle * (180 / Math.PI)) % 360,
+      //           size: (<Snake>player).header.width,
+      //           x: (<Snake>player).header.x.toFixed(2),
+      //           y: (<Snake>player).header.y.toFixed(2),
+      //           bodys,
+      //         },
+      //         'snake'
+      //       ),
+      //     },
+      //     true
+      //   );
+      // }
     }
   }
 
@@ -283,19 +311,19 @@ function sendData(data: utils.Bitmap, isBuffer: boolean): void {
  * event binding
  */
 function binding() {
-  // finger|mouse move event 
+  // finger|mouse move event
   function mousemove(e: MouseEvent | TouchEvent) {
     e.preventDefault();
     if (e instanceof TouchEvent) {
-      mouseCoords.x = (<TouchEvent>e).touches[0].pageX;
-      mouseCoords.y = (<TouchEvent>e).touches[0].pageY;
+      mouseCoords.x = (e as TouchEvent).touches[0].pageX;
+      mouseCoords.y = (e as TouchEvent).touches[0].pageY;
     } else {
-      const evt: MouseEvent = e || <MouseEvent>window.event;
+      const evt: MouseEvent = e || window.event as MouseEvent;
       mouseCoords.x = evt.clientX;
       mouseCoords.y = evt.clientY;
     }
-    const nx = gamemap.relative(mouseCoords.x) + gamemap.view.x;
-    const ny = gamemap.relative(mouseCoords.y) + gamemap.view.y;
+    const nx = (mouseCoords.x + gamemap.view.x) * gamemap.scale;
+    const ny = (mouseCoords.y + gamemap.view.y) * gamemap.scale;
 
     if (!isObserver || (isObserver && !isStatic)) {
       player.moveTo(nx, ny);
@@ -307,16 +335,16 @@ function binding() {
     window.addEventListener('touchmove', mousemove);
 
     if (player instanceof Observer) {
-      window.addEventListener('touchend', e => {
-        (<Observer>player).stop();
+      window.addEventListener('touchend', (e) => {
+        (player as Observer).stop();
       });
     }
   } else {
-    // change snake's direction when mouse moving 
+    // change snake's direction when mouse moving
     window.addEventListener('mousemove', mousemove);
 
     if (player instanceof Snake) {
-      const pl = <Snake>player;
+      const pl = player as Snake;
       // speedup
       window.addEventListener('mousedown', () => {
         pl.speedUp();
@@ -327,7 +355,7 @@ function binding() {
         pl.speedDown();
       });
     } else {
-      window.addEventListener('keyup', e => {
+      window.addEventListener('keyup', (e) => {
         switch (e.keyCode) {
           case KeyCodes.W:
             gamemap.setToScale(gamemap.scale + 0.2);
@@ -341,7 +369,8 @@ function binding() {
             gamemap.setToScale(1);
             break;
 
-          default: break;
+          default:
+            break;
         }
       });
     }

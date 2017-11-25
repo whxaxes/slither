@@ -1,10 +1,10 @@
+import { SPEED } from 'common/config';
+import { GameMap } from '~/framework/GameMap';
+import { ObserverInterface } from '~/framework/Observer';
+import { Food } from './Food';
 import { SnakeBaseOptions } from './SnakeBase';
 import { SnakeBody } from './SnakeBody';
-import { SnakeHeader, ServerSnakeHeader } from './SnakeHeader';
-import { Food } from './Food';
-import { SPEED } from '../../common/config';
-import { GameMap } from '../framework/GameMap';
-import { ObserverInterface } from '../framework/Observer';
+import { ServerSnakeHeader, SnakeHeader } from './SnakeHeader';
 
 const snakeImageStore = {
   store: {},
@@ -17,15 +17,12 @@ const snakeImageStore = {
       return this.store[key];
     }
 
-    this.store[key] = (kind === 0) ?
-      this.createBodyImg.apply(this, args) :
-      this.createHeaderImg.apply(this, args);
-
+    this.store[key] = this.createHeaderImg.apply(this, args);
     return this.store[key];
   },
 
-  // 创建身躯图片
-  createBodyImg(width: number, height: number, fillColor: string, strokeColor: string): HTMLCanvasElement {
+  // create image of snake header
+  createHeaderImg(width: number, height: number, fillColor: string, strokeColor: string): HTMLCanvasElement {
     const img: HTMLCanvasElement = document.createElement('canvas');
     const ctx: CanvasRenderingContext2D = img.getContext('2d');
     const dis: number = 2;
@@ -33,39 +30,6 @@ const snakeImageStore = {
     img.width = width + dis * 2;
     img.height = height + dis * 2;
 
-    ctx.save();
-    // draw a circle
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(img.width / 2, img.height / 2, width / 2, 0, Math.PI * 2);
-    ctx.fillStyle = fillColor;
-    // ctx.strokeStyle = strokeColor;
-    // ctx.stroke();
-    ctx.fill();
-
-    // draw line on snake's back
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(img.width / 2, img.height - dis);
-    ctx.lineTo(img.width / 2, (img.height - dis + img.height / 2) / 2);
-    ctx.strokeStyle = strokeColor;
-    ctx.stroke();
-
-    ctx.restore();
-
-    return img;
-  },
-
-  // 创建头部图片
-  createHeaderImg(width: number, height: number, fillColor: string, strokeColor: string): HTMLCanvasElement {
-    const img: HTMLCanvasElement = this.createBodyImg(
-      width,
-      height,
-      fillColor,
-      strokeColor
-    );
-    const ctx: CanvasRenderingContext2D = img.getContext('2d');
     const eyeRadius: number = width * 0.2;
 
     function drawEye(eyeX: number, eyeY: number): void {
@@ -86,50 +50,51 @@ const snakeImageStore = {
     // left eye
     drawEye(
       img.width / 2 - width / 2 + eyeRadius,
-      img.height / 2 - height / 2 + eyeRadius
+      img.height / 2 - height / 2 + eyeRadius,
     );
 
     // right eye
     drawEye(
       img.width / 2 + width / 2 - eyeRadius,
-      img.height / 2 - height / 2 + eyeRadius
+      img.height / 2 - height / 2 + eyeRadius,
     );
 
     return img;
-  }
+  },
 };
 
 interface SnakeOptions extends SnakeBaseOptions {
   length?: number;
-  fillColor?: string | Array<string>;
+  fillColor?: string;
   strokeColor?: string;
 }
 
 export class Snake implements ObserverInterface {
-  gamemap: GameMap;
-  header: SnakeHeader | ServerSnakeHeader;
-  bodys: Array<SnakeBody> = [];
-  bodyImages: Array<HTMLCanvasElement> = [];
-  colorIndex: number = 0;
-  point: number = 0;
-  isSpeedUp: boolean = false;
+  public gamemap: GameMap;
+  public header: SnakeHeader | ServerSnakeHeader;
+  public bodys: SnakeBody[] = [];
+  public bodyImages: HTMLCanvasElement[] = [];
+  public colorIndex: number = 0;
+  public point: number = 0;
+  public isSpeedUp: boolean = false;
+  public fillColor: string = '';
 
   constructor(
     options: SnakeOptions,
     public serverControl: boolean,
-    bodyCoords?: Array<number>
+    bodyCoords?: number[],
   ) {
     const imgWidth: number = 60;
     const imgHeight: number = 60;
     const strokeColor: string = options.strokeColor || '#000';
-    const fillColor: string | Array<string> = options.fillColor || '#fff';
-    const fillColors: Array<string> = (fillColor instanceof Array) ? fillColor : [fillColor];
+    const fillColor: string = options.fillColor || '#fff';
+    this.fillColor = fillColor;
 
     this.gamemap = options.gamemap;
 
     // 创建蛇头实例
     const headerOptions: SnakeBaseOptions = Object.assign(options, {
-      img: snakeImageStore.getImage(1, imgWidth, imgHeight, fillColors[0], strokeColor)
+      img: snakeImageStore.getImage(1, imgWidth, imgHeight, fillColor, strokeColor),
     });
 
     if (this.serverControl) {
@@ -138,18 +103,8 @@ export class Snake implements ObserverInterface {
       this.header = new SnakeHeader(headerOptions);
     }
 
-    // 创建身躯实例，生成花纹
-    this.bodyImages = fillColors.map(color => {
-      return snakeImageStore.getImage(0, imgWidth, imgHeight, color, strokeColor);
-    });
-    let image: HTMLCanvasElement;
-    let body: SnakeBody;
+    // 创建身躯实例
     for (let i = 0; i < options.length || 0; i++) {
-      if (!image || (i + 1) % 5 === 0) {
-        image = this.bodyImages[this.colorIndex % this.bodyImages.length];
-        this.colorIndex++;
-      }
-
       if (this.serverControl && bodyCoords && bodyCoords.length) {
         options.x = bodyCoords[i * 2];
         options.y = bodyCoords[i * 2 + 1];
@@ -157,7 +112,6 @@ export class Snake implements ObserverInterface {
 
       this.bodys.push(new SnakeBody(Object.assign(options, {
         tracer: this.bodys[i - 1] || this.header,
-        img: image
       })));
     }
 
@@ -179,33 +133,43 @@ export class Snake implements ObserverInterface {
   /**
    * 往坐标点移动
    */
-  moveTo(nx: number, ny: number) {
+  public moveTo(nx: number, ny: number) {
     this.header.moveTo(nx, ny);
   }
 
-  speedUp(): void {
+  public speedUp(): void {
+    if (this.isSpeedUp) {
+      return;
+    }
+
     this.isSpeedUp = true;
+    this.header.speed *= 2;
   }
 
-  speedDown(): void {
+  public speedDown(): void {
+    if (!this.isSpeedUp) {
+      return;
+    }
+
     this.isSpeedUp = false;
+    this.header.speed /= 2;
   }
 
-  stop() {
+  public stop() {
     this.header.stop();
   }
 
-  continue() {
+  public continue() {
     this.header.continue();
   }
 
-  eat(food: Food) {
+  public eat(food: Food) {
     this.point += food.point;
 
     // 增加分数引起虫子体积增大
     const added = food.point / 80;
     this.header.setSize(this.header.width + added);
-    this.bodys.forEach(body => { body.setSize(body.width + added); });
+    this.bodys.forEach((body) => { body.setSize(body.width + added); });
 
     const lastBody = this.bodys[this.bodys.length - 1];
     let image: HTMLCanvasElement = lastBody.img;
@@ -220,7 +184,7 @@ export class Snake implements ObserverInterface {
       y: lastBody.y,
       size: lastBody.width,
       tracer: lastBody,
-      img: image
+      img: image,
     });
 
     lastBody.follower = addedBody;
@@ -231,26 +195,38 @@ export class Snake implements ObserverInterface {
   /**
    * 更新状态
    */
-  update(): void {
+  public update(): void {
     // 不让蛇走出地图外
     this.gamemap.limit(this.header);
 
-    // // 通过update两次来达到加速效果
-    // if (this.isSpeedUp) {
-    //   for (let i = this.bodys.length - 1; i >= 0; i--) {
-    //     this.bodys[i].update();
-    //   }
+    const ctx = this.gamemap.ctx;
+    ctx.save();
+    ctx.lineWidth = this.header.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 9;
 
-    //   this.header.update();
-    // }
+    ctx.moveTo(
+      this.header.paintX,
+      this.header.paintY,
+    );
 
-    // 渲染蛇头蛇身
-    for (let i = this.bodys.length - 1; i >= 0; i--) {
-      this.bodys[i].update();
-      this.bodys[i].render();
+    let i = 0;
+    const len = this.bodys.length;
+    while (i < len) {
+      const body = this.bodys[i];
+      body.update(false, true);
+      if (!body.visible) { continue; }
+      ctx.lineTo(body.paintX, body.paintY);
+      i++;
     }
 
+    ctx.strokeStyle = this.fillColor;
+    ctx.stroke();
+    ctx.restore();
+
     this.header.update();
-    this.header.render();
   }
 }

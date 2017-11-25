@@ -1,21 +1,14 @@
-/**
- * Created by wanghx on 4/27/16.
- *
- * food
- *
- */
-
+import { GameMap } from '~/framework/GameMap';
 import { Base, BaseOptions } from './Base';
-import { GameMap } from '../framework/GameMap';
 
 interface FoodOptions extends BaseOptions {
   point: number;
 }
 
 export class Food extends Base {
-  point: number;
-  lightSize: number;
-  lightDirection: boolean = true;
+  public point: number;
+  public lightSize: number;
+  public lightDirection: boolean = true;
 
   constructor(options: FoodOptions) {
     super(options);
@@ -24,7 +17,7 @@ export class Food extends Base {
     this.lightSize = this.width / 2;        // 食物的半径, 发光半径
   }
 
-  update() {
+  public action() {
     const lightSpeed = 1;
 
     this.lightSize += this.lightDirection ? lightSpeed : -lightSpeed;
@@ -33,11 +26,9 @@ export class Food extends Base {
     if (this.lightSize > this.width || this.lightSize < this.width / 2) {
       this.lightDirection = !this.lightDirection;
     }
-
-    this.render();
   }
 
-  render() {
+  public render() {
     if (!this.visible) {
       return;
     }
@@ -53,7 +44,7 @@ export class Food extends Base {
       this.paintX,
       this.paintY,
       this.lightSize * this.paintWidth / this.width,
-      0, Math.PI * 2
+      0, Math.PI * 2,
     );
     ctx.fill();
 

@@ -1,17 +1,17 @@
+import { MAP_HEIGHT, MAP_RECT_HEIGHT, MAP_RECT_WIDTH, MAP_WIDTH } from 'common/config';
 import { EventEmitter } from 'eventemitter3';
-import { View, ViewTracker } from './View';
 import { SmallMap } from './SmallMap';
-import { MAP_WIDTH, MAP_HEIGHT, MAP_RECT_WIDTH, MAP_RECT_HEIGHT } from '../../common/config';
+import { View, ViewTracker } from './View';
 
 // Map class
 export class GameMap extends EventEmitter {
-  ctx: CanvasRenderingContext2D;
-  view: View;
-  smallmap: SmallMap;
-  readonly width: number = MAP_WIDTH;
-  readonly height: number = MAP_HEIGHT;
-  paintWidth: number;
-  paintHeight: number;
+  public ctx: CanvasRenderingContext2D;
+  public view: View;
+  public smallmap: SmallMap;
+  public readonly width: number = MAP_WIDTH;
+  public readonly height: number = MAP_HEIGHT;
+  public paintWidth: number;
+  public paintHeight: number;
   // 地图瓦片
   private tileImage: HTMLCanvasElement = document.createElement('canvas');
   private viewWidth: number;
@@ -22,7 +22,7 @@ export class GameMap extends EventEmitter {
     public canvas: HTMLCanvasElement,
     vwidth: number,
     vheight: number,
-    public scale: number = 1
+    public scale: number = 1,
   ) {
     super();
     this.canvas.width = vwidth;
@@ -35,33 +35,22 @@ export class GameMap extends EventEmitter {
   }
 
   /**
-   * 绘制参数变更
-   */
-  private paintSizeReset(): void {
-    this.tileImage.width = this.relative(this.tileImage.width);
-    this.tileImage.height = this.relative(this.tileImage.height);
-    this.paintWidth = this.relative(this.width);
-    this.paintHeight = this.relative(this.height);
-  }
-
-  /**
    * 设置map的缩放比例
    */
-  setScale(scale: number): void {
+  public setScale(scale: number): void {
     if (this.scale === scale) {
       return;
     }
 
     this.scale = scale < 1 ? 1 : scale;
     this.paintSizeReset();
-
     this.emit('scale_changed');
   }
 
   /**
    * 设置目标scale
    */
-  setToScale(scale: number): void {
+  public setToScale(scale: number): void {
     this.toScale = scale;
   }
 
@@ -70,21 +59,21 @@ export class GameMap extends EventEmitter {
    * @param val
    * @returns {*}
    */
-  relative(val: number): number {
+  public relative(val: number): number {
     return val / this.scale;
   }
 
   /**
    * 清空画布
    */
-  clear(): void {
+  public clear(): void {
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);
   }
 
   /**
    * 对地图本身的更新都在此处进行
    */
-  update(player: ViewTracker, callback: () => void): void {
+  public update(player: ViewTracker, callback: () => void): void {
     if (this.toScale && this.scale !== this.toScale) {
       // const scaleDis = this.toScale - this.scale;
       // if (Math.abs(scaleDis) < 0.01) {
@@ -106,7 +95,7 @@ export class GameMap extends EventEmitter {
   /**
    * 限制element的位置
    */
-  limit(element: { x: number, y: number, width?: number, height?: number }): void {
+  public limit(element: { x: number, y: number, width?: number, height?: number }): void {
     const whalf: number = (element.width || 1) / 2;
     if (element.x < whalf) {
       element.x = whalf;
@@ -125,25 +114,27 @@ export class GameMap extends EventEmitter {
   /**
    * 渲染地图
    */
-  render(): void {
+  public render(): void {
     const view = this.view;
+    const tileWid = this.relative(this.tileImage.width);
+    const tileHei = this.relative(this.tileImage.height);
     this.ctx.save();
-    const beginX = (view.x < 0) ? -view.x : (-view.x % this.tileImage.width);
-    const beginY = (view.y < 0) ? -view.y : (-view.y % this.tileImage.height);
+    const beginX = (view.x < 0) ? -view.x : (-view.x % tileWid);
+    const beginY = (view.y < 0) ? -view.y : (-view.y % tileHei);
     const endX = (view.x + view.width > this.paintWidth)
       ? (this.paintWidth - view.x)
-      : (beginX + view.width + this.tileImage.width);
+      : (beginX + view.width + tileWid);
     const endY = (view.y + view.height > this.paintHeight)
       ? (this.paintHeight - view.y)
-      : (beginY + view.height + this.tileImage.height);
+      : (beginY + view.height + tileHei);
 
-    for (let x = beginX; x <= endX; x += this.tileImage.width) {
-      for (let y = beginY; y <= endY; y += this.tileImage.height) {
+    for (let x = beginX; x <= endX; x += tileWid) {
+      for (let y = beginY; y <= endY; y += tileHei) {
         const cx = endX - x;
         const cy = endY - y;
-        const w = cx < this.tileImage.width ? cx : this.tileImage.width;
-        const h = cy < this.tileImage.height ? cy : this.tileImage.height;
-        this.ctx.drawImage(this.tileImage, 0, 0, w, h, x, y, w, h);
+        const w = cx < tileWid ? cx : tileWid;
+        const h = cy < tileHei ? cy : tileHei;
+        this.ctx.drawImage(this.tileImage, 0, 0, w * this.scale, h * this.scale, x, y, w, h);
       }
     }
 
@@ -153,12 +144,20 @@ export class GameMap extends EventEmitter {
   /**
    * 获取缩略图
    */
-  getThumbnail(width: number, height: number): HTMLCanvasElement {
+  public getThumbnail(width: number, height: number): HTMLCanvasElement {
     const image = document.createElement('canvas');
     image.width = width;
     image.height = height;
     this.drawPattern(image, this.width / width);
     return image;
+  }
+
+  /**
+   * 绘制参数变更
+   */
+  private paintSizeReset(): void {
+    this.paintWidth = this.relative(this.width);
+    this.paintHeight = this.relative(this.height);
   }
 
   /**
@@ -175,7 +174,7 @@ export class GameMap extends EventEmitter {
    */
   private drawPattern(image: HTMLCanvasElement, ratio: number = 1) {
     const ctx = image.getContext('2d');
-    const colors: Array<string> = ['#ccc', '#999'];
+    const colors: string[] = ['#ccc', '#999'];
     let color: string;
     const width = image.width * ratio;
     const height = image.height * ratio;

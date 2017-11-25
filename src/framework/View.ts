@@ -12,33 +12,35 @@ export class View {
     public width: number,
     public height: number,
     public x: number = 0,
-    public y: number = 0
-  ) {
-    // 监听gamemap的缩放事件
-    this.gamemap.on('scale_changed', () => {
-      this.x = gamemap.relative(this.x);
-      this.y = gamemap.relative(this.y);
-    });
+    public y: number = 0,
+  ) { }
+
+  public track(obj: ViewTracker) {
+    this.x = (obj.x / this.gamemap.scale) - this.width / 2;
+    this.y = (obj.y / this.gamemap.scale) - this.height / 2;
   }
 
-  track(obj: ViewTracker) {
-    this.x = this.gamemap.relative(obj.x) - this.width / 2;
-    this.y = this.gamemap.relative(obj.y) - this.height / 2;
+  public absoluteX(x: number) {
+    return (x + this.x) * this.gamemap.scale;
   }
 
-  relativeX(x: number) {
-    return this.gamemap.relative(x) - this.x;
+  public absoluteY(y: number) {
+    return (y + this.y) * this.gamemap.scale;
   }
 
-  relativeY(y: number) {
-    return this.gamemap.relative(y) - this.y;
+  public relativeX(x: number) {
+    return (x / this.gamemap.scale) - this.x;
   }
 
-  relativeW(width: number) {
-    return this.gamemap.relative(width);
+  public relativeY(y: number) {
+    return (y / this.gamemap.scale) - this.y;
   }
 
-  relativeH(height: number) {
-    return this.gamemap.relative(height);
+  public relativeW(width: number) {
+    return width / this.gamemap.scale;
+  }
+
+  public relativeH(height: number) {
+    return height / this.gamemap.scale;
   }
 }

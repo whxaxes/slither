@@ -1,6 +1,6 @@
+import { BASE_ANGLE, SPEED } from 'common/config';
+import { GameMap } from '~/framework/GameMap';
 import { Base, BaseOptions } from './Base';
-import { SPEED, BASE_ANGLE } from '../../common/config';
-import { GameMap } from '../framework/GameMap';
 
 export interface SnakeBaseOptions extends BaseOptions {
   img?: HTMLCanvasElement;
@@ -18,25 +18,27 @@ export class Movements {
     public y: number,
     public vx: number,
     public vy: number,
-    public angle: number
+    public angle: number,
   ) { }
 }
 
 // snake base class
 export abstract class SnakeBase extends Base {
   [proName: string]: any;
-  img: HTMLCanvasElement;
-  vx: number = 0;
-  vy: number = 0;
-  angle: number;
-  tracer?: SnakeBase;
-  stopped: boolean = false;
+  public img?: HTMLCanvasElement;
+  public vx: number = 0;
+  public vy: number = 0;
+  public angle: number;
+  public tracer?: SnakeBase;
+  public stopped: boolean = false;
+
   // save snake's movement
-  movementQueue: Array<Movements> = [];
+  public movementQueue: Movements[] = [];
+
   // maxlength of queue
-  movementQueueLen: number;
-  speed: number = SPEED;
-  private _follower: SnakeBase;
+  public movementQueueLen: number;
+  public speed: number = SPEED;
+  private privateFollower: SnakeBase;
 
   constructor(options: SnakeBaseOptions) {
     super(options);
@@ -50,7 +52,7 @@ export abstract class SnakeBase extends Base {
   }
 
   set follower(follower: SnakeBase) {
-    this._follower = follower;
+    this.privateFollower = follower;
 
     // auto create queue by follower's movement
     if (!this.movementQueue.length && follower) {
@@ -76,13 +78,13 @@ export abstract class SnakeBase extends Base {
   }
 
   get follower(): SnakeBase {
-    return this._follower;
+    return this.privateFollower;
   }
 
   /**
    * stop moving
    */
-  stop() {
+  public stop() {
     this.stopped = true;
 
     if (this.follower) {
@@ -93,7 +95,7 @@ export abstract class SnakeBase extends Base {
   /**
    * continue moving
    */
-  continue() {
+  public continue() {
     this.stopped = false;
 
     if (this.follower) {
@@ -104,7 +106,7 @@ export abstract class SnakeBase extends Base {
   /**
    * set size
    */
-  setSize(size: number): void {
+  public setSize(size: number): void {
     this.width = size;
     this.height = size;
 
@@ -115,13 +117,13 @@ export abstract class SnakeBase extends Base {
   /**
    * update location
    */
-  update(needMove: boolean = true): void {
+  public action(needMove: boolean = true): void {
     if (needMove && !this.stopped) {
       this.move();
 
       // save movement
       this.movementQueue.push(
-        new Movements(this.x, this.y, this.vx, this.vy, this.angle)
+        new Movements(this.x, this.y, this.vx, this.vy, this.angle),
       );
 
       if (this.movementQueue.length > this.movementQueueLen) {
@@ -130,8 +132,8 @@ export abstract class SnakeBase extends Base {
     }
   }
 
-  render(): void {
-    if (!this.visible) {
+  public render(): void {
+    if (!this.visible || !this.img) {
       return;
     }
 
@@ -144,10 +146,10 @@ export abstract class SnakeBase extends Base {
       -this.paintWidth / 2,
       -this.paintHeight / 2,
       this.paintWidth,
-      this.paintHeight
+      this.paintHeight,
     );
     ctx.restore();
   }
 
-  abstract move(): void;
+  public abstract move(): void;
 }

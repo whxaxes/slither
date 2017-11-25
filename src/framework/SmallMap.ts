@@ -13,10 +13,10 @@ export class SmallMap {
   constructor(
     private gamemap: GameMap,
     private margin: number,
-    private radius: number
+    private radius: number,
   ) { this.initImage(); }
 
-  initImage(): void {
+  public initImage(): void {
     this.image.width = this.radius * 2;
     this.image.height = this.radius * 2;
     this.x = this.gamemap.view.width - this.radius * 2 - this.margin;
@@ -49,12 +49,12 @@ export class SmallMap {
     // 绘制地图缩略图
     ctx.drawImage(
       this.gamemap.getThumbnail(this.smallMapWid, this.smallMapHei),
-      smrectx, smrecty, this.smallMapWid, this.smallMapHei
+      smrectx, smrecty, this.smallMapWid, this.smallMapHei,
     );
     ctx.restore();
   }
 
-  render() {
+  public render() {
     // 相对比例
     const radio = this.smallMapWid / this.gamemap.paintWidth;
     const ctx: CanvasRenderingContext2D = this.gamemap.ctx;

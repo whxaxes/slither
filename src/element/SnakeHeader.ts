@@ -1,5 +1,5 @@
+import { BASE_ANGLE, SYNC_PER_FRAME } from 'common/config';
 import { SnakeBase, SnakeBaseOptions } from './SnakeBase';
-import { BASE_ANGLE, SYNC_PER_FRAME } from '../../common/config';
 
 // control by player
 export class SnakeHeader extends SnakeBase {
@@ -13,14 +13,14 @@ export class SnakeHeader extends SnakeBase {
   }
 
   /**
-   * 往坐标点移动
+   * move to new position
    */
-  moveTo(nx: number, ny: number): void {
+  public moveTo(nx: number, ny: number): void {
     const x: number = nx - this.x;
     const y: number = this.y - ny;
     let angle: number = Math.atan(Math.abs(x / y));
 
-    // 计算角度, 角度值为 0-360
+    // calculate angle, value is 0-360
     if (x > 0 && y < 0) {
       angle = Math.PI - angle;
     } else if (x < 0 && y < 0) {
@@ -29,30 +29,29 @@ export class SnakeHeader extends SnakeBase {
       angle = Math.PI * 2 - angle;
     }
 
-    // 老的目标角度, 但是是小于360度的, 因为每次计算出来的目标角度也是0 - 360度
     const oldAngle: number = Math.abs(this.toAngle % (Math.PI * 2));
 
-    // 转了多少圈
+    // number of turns
     let rounds: number = ~~(this.toAngle / (Math.PI * 2));
 
     this.toAngle = angle;
 
     if (oldAngle >= Math.PI * 3 / 2 && this.toAngle <= Math.PI / 2) {
-      // 角度从第四象限左划至第一象限, 增加圈数
+      // move from fourth quadrant to first quadrant
       rounds++;
     } else if (oldAngle <= Math.PI / 2 && this.toAngle >= Math.PI * 3 / 2) {
-      // 角度从第一象限划至第四象限, 减少圈数
+      // move from first quadrant to fourth quadrant
       rounds--;
     }
 
-    // 计算真实要转到的角度
+    // calculate the real angle by rounds
     this.toAngle += rounds * Math.PI * 2;
   }
 
   /**
-   * 根据蛇头角度计算水平速度和垂直速度
+   * calculate horizontal speed and vertical speed by angle of snake header
    */
-  velocity(): void {
+  public velocity(): void {
     const angle: number = this.angle % (Math.PI * 2);
     const vx: number = Math.abs(this.speed * Math.sin(angle));
     const vy: number = Math.abs(this.speed * Math.cos(angle));
@@ -72,7 +71,7 @@ export class SnakeHeader extends SnakeBase {
     }
   }
 
-  move() {
+  public move() {
     this.turnAround();
     this.velocity();
     this.x += this.vx;
@@ -80,9 +79,9 @@ export class SnakeHeader extends SnakeBase {
   }
 
   /**
-  * 蛇头转头
-  */
-  turnAround(): void {
+   * turn around
+   */
+  public turnAround(): void {
     const angleDistance: number = this.toAngle - this.angle; // 与目标角度之间的角度差
     const turnSpeed: number = 0.045; // 转头速度
 
@@ -100,7 +99,7 @@ export class ServerSnakeHeader extends SnakeBase {
   private aimx: number;
   private aimy: number;
 
-  moveTo(nx: number, ny: number) {
+  public moveTo(nx: number, ny: number) {
     this.aimx = nx;
     this.aimy = ny;
     this.vx = (nx - this.x) / SYNC_PER_FRAME;
@@ -108,7 +107,7 @@ export class ServerSnakeHeader extends SnakeBase {
     this.continue();
   }
 
-  move() {
+  public move() {
     if (Math.abs(this.aimx - this.x) < 1) {
       this.x = this.aimx;
       this.y = this.aimy;
