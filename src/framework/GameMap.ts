@@ -12,6 +12,7 @@ export class GameMap extends EventEmitter {
   public readonly height: number = MAP_HEIGHT;
   public paintWidth: number;
   public paintHeight: number;
+
   // 地图瓦片
   private tileImage: HTMLCanvasElement = document.createElement('canvas');
   private viewWidth: number;
@@ -20,16 +21,16 @@ export class GameMap extends EventEmitter {
 
   constructor(
     public canvas: HTMLCanvasElement,
-    vwidth: number,
-    vheight: number,
+    vWidth: number,
+    vHeight: number,
     public scale: number = 1,
   ) {
     super();
-    this.canvas.width = vwidth;
-    this.canvas.height = vheight;
+    this.canvas.width = vWidth;
+    this.canvas.height = vHeight;
     this.ctx = this.canvas.getContext('2d');
     this.paintSizeReset();
-    this.view = new View(this, vwidth, vheight);
+    this.view = new View(this, vWidth, vHeight);
     this.smallmap = new SmallMap(this, 30, 50);
     this.createTile();
   }

@@ -9,7 +9,7 @@
     "removeComments": false,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
       "common/*": ["./common/*"]

@@ -1,8 +1,8 @@
 import { SPEED } from 'common/config';
+import { gameMap } from '~/main';
 import { GameMap } from './GameMap';
 
 export interface ObserverInterface {
-  gamemap: GameMap;
   x: number;
   y: number;
   moveTo(nx: number, ny: number): void;
@@ -14,7 +14,6 @@ export class Observer implements ObserverInterface {
   private vy: number = 0;
 
   constructor(
-    public gamemap: GameMap,
     public x: number,
     public y: number,
   ) { }
@@ -28,25 +27,25 @@ export class Observer implements ObserverInterface {
   }
 
   public moveTo(nx: number, ny: number): void {
-    const mx = this.gamemap.view.relativeX(nx);
-    const my = this.gamemap.view.relativeY(ny);
-    const ox = this.gamemap.view.relativeX(this.x);
-    const oy = this.gamemap.view.relativeY(this.y);
+    const mx = gameMap.view.relativeX(nx);
+    const my = gameMap.view.relativeY(ny);
+    const ox = gameMap.view.relativeX(this.x);
+    const oy = gameMap.view.relativeY(this.y);
     const xc: number = mx - ox;
     const yc: number = my - oy;
     const hyp: number = Math.sqrt(xc * xc + yc * yc);
-    const ratio = 2 * SPEED * this.gamemap.scale / hyp;
+    const ratio = 2 * SPEED * gameMap.scale / hyp;
     const limitdis = 200;
 
-    if (Math.abs(ox + this.gamemap.view.width / 2 - mx) < limitdis
-      || Math.abs(oy - this.gamemap.view.width / 2 - mx) < limitdis) {
+    if (Math.abs(ox + gameMap.view.width / 2 - mx) < limitdis
+      || Math.abs(oy - gameMap.view.width / 2 - mx) < limitdis) {
       this.vx = xc * ratio;
     } else {
       this.vx = 0;
     }
 
-    if (Math.abs(oy + this.gamemap.view.height / 2 - my) < limitdis
-      || Math.abs(oy - this.gamemap.view.height / 2 - my) < limitdis) {
+    if (Math.abs(oy + gameMap.view.height / 2 - my) < limitdis
+      || Math.abs(oy - gameMap.view.height / 2 - my) < limitdis) {
       this.vy = yc * ratio;
     } else {
       this.vy = 0;
@@ -56,6 +55,6 @@ export class Observer implements ObserverInterface {
   public update() {
     this.x += this.vx;
     this.y += this.vy;
-    this.gamemap.limit(this);
+    gameMap.limit(this);
   }
 }

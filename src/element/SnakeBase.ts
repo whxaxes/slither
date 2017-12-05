@@ -1,7 +1,11 @@
 import { BASE_ANGLE, SPEED } from 'common/config';
 import { GameMap } from '~/framework/GameMap';
+import { gameMap } from '~/main';
 import { Base, BaseOptions } from './Base';
+import { SnakeBody } from './SnakeBody';
+import { SnakeHeader } from './SnakeHeader';
 
+type FollowerType = SnakeBody | SnakeHeader;
 export interface SnakeBaseOptions extends BaseOptions {
   img?: HTMLCanvasElement;
   angle?: number;
@@ -38,7 +42,7 @@ export abstract class SnakeBase extends Base {
   // maxlength of queue
   public movementQueueLen: number;
   public speed: number = SPEED;
-  private privateFollower: SnakeBase;
+  private privateFollower: FollowerType;
 
   constructor(options: SnakeBaseOptions) {
     super(options);
@@ -51,7 +55,7 @@ export abstract class SnakeBase extends Base {
     this.setSize(options.size);
   }
 
-  set follower(follower: SnakeBase) {
+  set follower(follower: FollowerType) {
     this.privateFollower = follower;
 
     // auto create queue by follower's movement
@@ -77,7 +81,7 @@ export abstract class SnakeBase extends Base {
     }
   }
 
-  get follower(): SnakeBase {
+  get follower(): FollowerType {
     return this.privateFollower;
   }
 
@@ -118,38 +122,39 @@ export abstract class SnakeBase extends Base {
    * update location
    */
   public action(needMove: boolean = true): void {
-    if (needMove && !this.stopped) {
-      this.move();
-
-      // save movement
-      this.movementQueue.push(
-        new Movements(this.x, this.y, this.vx, this.vy, this.angle),
-      );
-
-      if (this.movementQueue.length > this.movementQueueLen) {
-        this.movementQueue.shift();
-      }
-    }
-  }
-
-  public render(): void {
-    if (!this.visible || !this.img) {
+    if (this.stopped) {
       return;
     }
 
-    const ctx = this.gamemap.ctx;
-    ctx.save();
-    ctx.translate(this.paintX, this.paintY);
-    ctx.rotate(this.angle);
-    ctx.drawImage(
+    this.move();
+
+    // save movement
+    this.movementQueue.push(
+      new Movements(this.x, this.y, this.vx, this.vy, this.angle),
+    );
+
+    if (this.movementQueue.length > this.movementQueueLen) {
+      this.movementQueue.shift();
+    }
+  }
+
+  public abstract move(): void;
+
+  public render(): void {
+    if (!this.img || !this.visible) {
+      return;
+    }
+
+    gameMap.ctx.save();
+    gameMap.ctx.translate(this.paintX, this.paintY);
+    gameMap.ctx.rotate(this.angle);
+    gameMap.ctx.drawImage(
       this.img,
       -this.paintWidth / 2,
       -this.paintHeight / 2,
       this.paintWidth,
       this.paintHeight,
     );
-    ctx.restore();
+    gameMap.ctx.restore();
   }
-
-  public abstract move(): void;
 }

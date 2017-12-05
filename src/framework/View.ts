@@ -8,7 +8,7 @@ export interface ViewTracker {
 // 视窗
 export class View {
   constructor(
-    public gamemap: GameMap,
+    public gameMap: GameMap,
     public width: number,
     public height: number,
     public x: number = 0,
@@ -16,31 +16,31 @@ export class View {
   ) { }
 
   public track(obj: ViewTracker) {
-    this.x = (obj.x / this.gamemap.scale) - this.width / 2;
-    this.y = (obj.y / this.gamemap.scale) - this.height / 2;
+    this.x = (obj.x / this.gameMap.scale) - this.width / 2;
+    this.y = (obj.y / this.gameMap.scale) - this.height / 2;
   }
 
   public absoluteX(x: number) {
-    return (x + this.x) * this.gamemap.scale;
+    return (x + this.x) * this.gameMap.scale;
   }
 
   public absoluteY(y: number) {
-    return (y + this.y) * this.gamemap.scale;
+    return (y + this.y) * this.gameMap.scale;
   }
 
   public relativeX(x: number) {
-    return (x / this.gamemap.scale) - this.x;
+    return (x / this.gameMap.scale) - this.x;
   }
 
   public relativeY(y: number) {
-    return (y / this.gamemap.scale) - this.y;
+    return (y / this.gameMap.scale) - this.y;
   }
 
   public relativeW(width: number) {
-    return width / this.gamemap.scale;
+    return width / this.gameMap.scale;
   }
 
   public relativeH(height: number) {
-    return height / this.gamemap.scale;
+    return height / this.gameMap.scale;
   }
 }

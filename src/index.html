@@ -43,7 +43,7 @@
 
 <body>
   <div id="log"></div>
-  <input type="hidden" id="ip" value="{{ IP }}">
+  <input type="hidden" id="ip" value="<%= require('ip').address()%>">
   <canvas id="cas">
     Your browser do not support canvas! (๑•̀ㅁ•́ฅ)
   </canvas>

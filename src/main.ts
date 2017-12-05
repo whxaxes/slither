@@ -11,36 +11,38 @@ import { Observer } from '~/framework/Observer';
 
 const raf: (callback: FrameRequestCallback) => {} =
   window.requestAnimationFrame || window.webkitRequestAnimationFrame;
-const canvas: HTMLCanvasElement = document.getElementById(
-  'cas',
-) as HTMLCanvasElement;
-
-// hot reload
-if (module.hot) {
-  module.hot.accept();
-}
+const canvas: HTMLCanvasElement = document.getElementById('cas') as HTMLCanvasElement;
 
 // local ip address
-let localIp: string = (document.getElementById('ip') as HTMLInputElement).value;
+const ip: string = (document.getElementById('ip') as HTMLInputElement).value;
 let isInit: boolean = false;
+
 // sync data frame count
 const syncFrameCount: number = 5;
+
 // player id
 let playerId: number | undefined;
+
 // judge player is an observer or not
 const isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
 const isStatic: boolean = window.location.href.indexOf('static=true') >= 0;
+
 // window's width and height
 const vWidth: number = window.innerWidth;
 const vHeight: number = window.innerHeight;
+
 // game map
-const gamemap: GameMap = new GameMap(canvas, vWidth, vHeight);
+export const gameMap: GameMap = new GameMap(canvas, vWidth, vHeight);
+
 // player object
 let player: Snake | Observer;
+
 // record mouse coord
 const mouseCoords: { x?: number; y?: number } = {};
+
 // snakes map
 const snakes: Map<any, any> = new Map();
+
 // keycode
 const enum KeyCodes {
   W = 87,
@@ -55,12 +57,8 @@ const foods: Food[] = [];
 const stats: Stats = new Stats();
 document.body.appendChild(stats.dom);
 
-if (localIp.indexOf('{{') >= 0) {
-  localIp = '127.0.0.1';
-}
-
 // websocket
-const ws: WebSocket = new WebSocket(`ws://${localIp}:${config.socketPort}`);
+const ws: WebSocket = new WebSocket(`ws://${ip}:${config.socketPort}`);
 ws.binaryType = 'arraybuffer';
 
 // websocket connected
@@ -79,11 +77,13 @@ ws.onerror = () => {
 };
 
 ws.onclose = (...args: any[]) => {
-  if (!isInit) {
-    const x = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
-    const y = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
-    initGame(x, y);
+  if (isInit) {
+    return;
   }
+
+  const x = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
+  const y = ~~(Math.random() * (config.MAP_WIDTH - 100) + 100 / 2);
+  initGame(x, y);
 };
 
 // receive data
@@ -124,7 +124,6 @@ ws.onmessage = (e) => {
           data.id,
           (snake = new Snake(
             {
-              gamemap,
               x: data.x,
               y: data.y,
               angle: data.angle * Math.PI / 180,
@@ -161,11 +160,10 @@ function initGame(x: number, y: number): void {
 
   // create player
   if (isObserver) {
-    player = new Observer(gamemap, gamemap.width / 2, gamemap.height / 2);
+    player = new Observer(gameMap.width / 2, gameMap.height / 2);
   } else {
     player = new Snake(
       {
-        gamemap,
         x,
         y,
         size: 30,
@@ -183,9 +181,9 @@ function initGame(x: number, y: number): void {
   //   const size = ~~(point / 3);
 
   //   foods.push(new Food({
-  //     gamemap, size, point,
-  //     x: ~~(Math.random() * (gamemap.width - 2 * size) + size),
-  //     y: ~~(Math.random() * (gamemap.height - 2 * size) + size)
+  //     size, point,
+  //     x: ~~(Math.random() * (gameMap.width - 2 * size) + size),
+  //     y: ~~(Math.random() * (gameMap.height - 2 * size) + size)
   //   }));
   // }
 
@@ -222,40 +220,40 @@ function animate(): void {
     time = ntime;
 
     // update map and player
-    gamemap.update(player, () => {
+    gameMap.update(player, () => {
       player.update();
 
-      snakes.forEach((snake) => {
-        snake.update();
-      });
+      // snakes.forEach((snake) => {
+      //   snake.update();
+      // });
 
-      if (player instanceof Snake) {
-        // 渲染食物, 以及检测食物与蛇头的碰撞
-        foods.forEach((food) => {
-          food.update();
+      // if (player instanceof Snake) {
+      //   // 渲染食物, 以及检测食物与蛇头的碰撞
+      //   foods.forEach((food) => {
+      //     food.update();
 
-          if (food.visible && collision((player as Snake).header, food)) {
-            const added = (player as Snake).eat(food);
-            foods.splice(foods.indexOf(food), 1);
+      //     if (food.visible && collision((player as Snake).header, food)) {
+      //       const added = (player as Snake).eat(food);
+      //       foods.splice(foods.indexOf(food), 1);
 
-            // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-            const newscale =
-              gamemap.scale + added / ((player as Snake).header.width * 4);
-            if (newscale < 1.4) {
-              gamemap.setToScale(newscale);
-            }
+      //       // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
+      //       const newscale =
+      //         gameMap.scale + added / ((player as Snake).header.width * 4);
+      //       if (newscale < 1.4) {
+      //         gameMap.setToScale(newscale);
+      //       }
 
-            return;
-          }
-        });
-      }
+      //       return;
+      //     }
+      //   });
+      // }
     });
 
     // if (mouseCoords.x) {
-    //   gamemap.ctx.beginPath();
-    //   gamemap.ctx.moveTo((<Snake>player).header.paintX, (<Snake>player).header.paintY);
-    //   gamemap.ctx.lineTo(mouseCoords.x, mouseCoords.y);
-    //   gamemap.ctx.stroke();
+    //   gameMap.ctx.beginPath();
+    //   gameMap.ctx.moveTo((<Snake>player).header.paintX, (<Snake>player).header.paintY);
+    //   gameMap.ctx.lineTo(mouseCoords.x, mouseCoords.y);
+    //   gameMap.ctx.stroke();
     // }
 
     if (!(player instanceof Observer) && playerId) {
@@ -318,12 +316,12 @@ function binding() {
       mouseCoords.x = (e as TouchEvent).touches[0].pageX;
       mouseCoords.y = (e as TouchEvent).touches[0].pageY;
     } else {
-      const evt: MouseEvent = e || window.event as MouseEvent;
+      const evt: MouseEvent = e || (window.event as MouseEvent);
       mouseCoords.x = evt.clientX;
       mouseCoords.y = evt.clientY;
     }
-    const nx = (mouseCoords.x + gamemap.view.x) * gamemap.scale;
-    const ny = (mouseCoords.y + gamemap.view.y) * gamemap.scale;
+    const nx = (mouseCoords.x + gameMap.view.x) * gameMap.scale;
+    const ny = (mouseCoords.y + gameMap.view.y) * gameMap.scale;
 
     if (!isObserver || (isObserver && !isStatic)) {
       player.moveTo(nx, ny);
@@ -358,15 +356,15 @@ function binding() {
       window.addEventListener('keyup', (e) => {
         switch (e.keyCode) {
           case KeyCodes.W:
-            gamemap.setToScale(gamemap.scale + 0.2);
+            gameMap.setToScale(gameMap.scale + 0.2);
             break;
 
           case KeyCodes.S:
-            gamemap.setToScale(gamemap.scale - 0.2);
+            gameMap.setToScale(gameMap.scale - 0.2);
             break;
 
           case KeyCodes.A:
-            gamemap.setToScale(1);
+            gameMap.setToScale(1);
             break;
 
           default:

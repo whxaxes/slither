@@ -1,10 +1,11 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 
 module.exports = {
   entry: {
-    main: ['./src/main.ts'],
+    main: [ './src/main.ts' ],
   },
 
   output: {
@@ -17,8 +18,13 @@ module.exports = {
       /\.d\.ts$/,
     ]),
     new HtmlWebpackPlugin({
-      inject: true,
+      filename: 'index.html',
       template: 'src/index.html',
+    }),
+    new ProgressBarPlugin({
+      width: 100,
+      format: 'Building [:bar] (:percent) (:elapsed seconds)',
+      clear: false,
     }),
   ],
 

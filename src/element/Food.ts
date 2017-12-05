@@ -1,4 +1,5 @@
 import { GameMap } from '~/framework/GameMap';
+import { gameMap } from '~/main';
 import { Base, BaseOptions } from './Base';
 
 interface FoodOptions extends BaseOptions {
@@ -14,7 +15,7 @@ export class Food extends Base {
     super(options);
 
     this.point = options.point;
-    this.lightSize = this.width / 2;        // 食物的半径, 发光半径
+    this.lightSize = this.width / 2;
   }
 
   public action() {
@@ -33,7 +34,7 @@ export class Food extends Base {
       return;
     }
 
-    const ctx = this.gamemap.ctx;
+    const ctx = gameMap.ctx;
 
     ctx.fillStyle = '#fff';
 
