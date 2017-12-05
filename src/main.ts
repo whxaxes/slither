@@ -5,7 +5,6 @@ import Stats = require('stats.js');
 import { Base } from '~/element/Base';
 import { Food } from '~/element/Food';
 import { Snake } from '~/element/Snake';
-import { ServerSnakeHeader, SnakeHeader } from '~/element/SnakeHeader';
 import { GameMap } from '~/framework/GameMap';
 import { Observer } from '~/framework/Observer';
 
@@ -117,7 +116,7 @@ ws.onmessage = (e) => {
         return;
       } else if (snakes.has(data.id)) {
         snake = snakes.get(data.id);
-        (snake.header as ServerSnakeHeader).angle = data.angle * Math.PI / 180;
+        snake.angle = data.angle * Math.PI / 180;
         snake.moveTo(data.x, data.y);
       } else {
         snakes.set(
@@ -131,7 +130,6 @@ ws.onmessage = (e) => {
               fillColor: '#ccc',
               length: data.bodys.length / 2,
             },
-            true,
             data.bodys,
           )),
         );
@@ -166,13 +164,12 @@ function initGame(x: number, y: number): void {
       {
         x,
         y,
-        size: 30,
-        length: 20,
+        size: 60,
+        length: 1580,
         angle: Math.random() * 2 * Math.PI,
         fillColor: '#fff',
         strokeColor: '#333',
       },
-      false,
     );
   }
 
