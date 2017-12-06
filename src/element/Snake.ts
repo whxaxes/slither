@@ -1,6 +1,5 @@
 import { BASE_ANGLE, SPEED, SYNC_PER_FRAME } from 'common/config';
 import { GameMap } from '~/framework/GameMap';
-import { ObserverInterface } from '~/framework/Observer';
 import { getSnakeHeader } from '~/libs/imageStore';
 import { gameMap } from '~/main';
 import { Base, BaseOptions } from './Base';
@@ -13,9 +12,7 @@ interface SnakeOptions extends BaseOptions {
   strokeColor?: string;
 }
 
-export class Movements {
-  [proName: string]: any;
-
+export class Movement {
   constructor(
     public x: number,
     public y: number,
@@ -24,7 +21,7 @@ export class Movements {
   ) { }
 }
 
-export class Snake extends Base implements ObserverInterface {
+export class Snake extends Base {
   public img?: HTMLCanvasElement;
   public point: number = 0;
   public isSpeedUp: boolean = false;
@@ -33,21 +30,19 @@ export class Snake extends Base implements ObserverInterface {
   public stopped: boolean = false;
 
   // save snake's movement
-  public movementQueue: Movements[] = [];
+  public movementQueue: Movement[] = [];
 
   // max length of queue
   public movementQueueLen: number;
   public speed: number = SPEED;
   public oldSpeed: number = SPEED;
-  private length: number;
-  private toAngle: number;
+  public length: number;
+  public toAngle: number;
+  private turnSpeed: number = 0.06;
   private vx: number = 0;
   private vy: number = 0;
 
-  constructor(
-    options: SnakeOptions,
-    bodyCoords?: number[],
-  ) {
+  constructor(options: SnakeOptions) {
     super(options);
     const strokeColor: string = options.strokeColor || '#000';
     this.fillColor = options.fillColor || '#fff';
@@ -61,6 +56,7 @@ export class Snake extends Base implements ObserverInterface {
     this.width += added;
     this.height += added;
     this.length += added * 50;
+    this.turnSpeed -= added / 1000;
     this.img = getSnakeHeader(this.width, this.height);
     this.movementQueueLen = Math.ceil(this.length / this.oldSpeed);
   }
@@ -123,13 +119,12 @@ export class Snake extends Base implements ObserverInterface {
   // turn around
   public turnAround(): void {
     const angleDistance: number = this.toAngle - this.angle;
-    const turnSpeed: number = 0.045;
 
-    if (Math.abs(angleDistance) <= turnSpeed) {
+    if (Math.abs(angleDistance) <= this.turnSpeed) {
       // reset angle
       this.toAngle = this.angle = BASE_ANGLE + this.toAngle % (Math.PI * 2);
     } else {
-      this.angle += Math.sign(angleDistance) * turnSpeed;
+      this.angle += Math.sign(angleDistance) * this.turnSpeed;
     }
   }
 
@@ -164,9 +159,13 @@ export class Snake extends Base implements ObserverInterface {
 
   // snake action
   public action() {
+    if (this.stopped) {
+      return;
+    }
+
     // save movement
     this.movementQueue.push(
-      new Movements(this.x, this.y, this.speed, this.angle),
+      new Movement(this.x, this.y, this.speed, this.angle),
     );
 
     if (this.movementQueue.length > this.movementQueueLen) {
@@ -230,5 +229,52 @@ export class Snake extends Base implements ObserverInterface {
       this.paintHeight,
     );
     gameMap.ctx.restore();
+  }
+}
+
+export class CustomSnake extends Snake {
+  private moveList: Movement[] = [];
+  private lastMovement: Movement;
+  private animateStep: number = 1;
+
+  // move to new position
+  public sync(newSize: number, length: number, movement: Movement): void {
+    const added = newSize - this.width;
+    this.length = length;
+    this.updateSize(added);
+    this.moveList.push(movement);
+  }
+
+  // snake action
+  public action() {
+    if (this.stopped || !this.moveList.length) {
+      return;
+    }
+
+    // save movement
+    if (this.lastMovement) {
+      this.movementQueue.push(this.lastMovement);
+
+      if (this.movementQueue.length > this.movementQueueLen) {
+        this.movementQueue.shift();
+      }
+    }
+
+    const len = this.moveList.length;
+    const start = this.moveList.length - this.animateStep;
+    this.moveList = this.moveList.slice(0, (start < 0 ? 0 : start) + 1);
+    const movement = this.moveList.shift();
+    this.lastMovement = movement;
+    this.moveTo(movement.x, movement.y);
+    this.toAngle = this.angle = BASE_ANGLE + this.toAngle % (Math.PI * 2);
+    this.x = movement.x;
+    this.y = movement.y;
+    this.speed = movement.speed;
+
+    if (len > 6) {
+      this.animateStep = 3;
+    } else {
+      this.animateStep = 1;
+    }
   }
 }

@@ -4,7 +4,7 @@ import 'es6-shim';
 import Stats = require('stats.js');
 import { Base } from '~/element/Base';
 import { Food } from '~/element/Food';
-import { Snake } from '~/element/Snake';
+import { CustomSnake, Movement, Snake } from '~/element/Snake';
 import { GameMap } from '~/framework/GameMap';
 import { Observer } from '~/framework/Observer';
 
@@ -40,7 +40,7 @@ let player: Snake | Observer;
 const mouseCoords: { x?: number; y?: number } = {};
 
 // snakes map
-const snakes: Map<any, any> = new Map();
+const snakes: Map<any, CustomSnake> = new Map();
 
 // keycode
 const enum KeyCodes {
@@ -62,13 +62,10 @@ ws.binaryType = 'arraybuffer';
 
 // websocket connected
 ws.onopen = () => {
-  sendData(
-    {
-      opt: config.CMD_INIT,
-      data: [vWidth, vHeight],
-    },
-    true,
-  );
+  sendData(config.CMD_INIT, utils.VIEW_TYPE, {
+    width: vWidth,
+    height: vHeight,
+  });
 };
 
 ws.onerror = () => {
@@ -87,21 +84,21 @@ ws.onclose = (...args: any[]) => {
 
 // receive data
 ws.onmessage = (e) => {
-  let bitmap: utils.Bitmap;
-  let data: utils.Struct;
+  let data;
   const buf = e.data;
 
   if (buf instanceof ArrayBuffer) {
-    bitmap = utils.decode(buf);
+    data = utils.decode(buf);
   } else {
-    bitmap = JSON.parse(buf);
+    data = JSON.parse(buf);
   }
 
-  switch (bitmap.opt) {
+  let packet;
+  switch (data.opt) {
     case config.CMD_INIT_ACK:
-      data = utils.arrayToObj(bitmap.data, 'snake');
-      playerId = data.id;
-      initGame(data.x, data.y);
+      packet = data.data[0].packet;
+      playerId = packet.id;
+      initGame(packet.x, packet.y);
       break;
 
     case config.CMD_SYNC_OTHER_COORD:
@@ -109,39 +106,44 @@ ws.onmessage = (e) => {
         return;
       }
 
-      let snake: Snake;
-      data = utils.arrayToObj(bitmap.data, 'snake');
+      let snake: CustomSnake;
+      data.data.forEach((item: any) => {
+        packet = item.packet;
+        if (item.type === utils.SNAKE_TYPE) {
+          if (playerId === packet.id) {
+            return;
+          } else if (snakes.has(packet.id)) {
+            snake = snakes.get(packet.id);
+            const movement = new Movement(
+              packet.x,
+              packet.y,
+              packet.speed,
+              packet.angle,
+            );
 
-      if (playerId === data.id) {
-        return;
-      } else if (snakes.has(data.id)) {
-        snake = snakes.get(data.id);
-        snake.angle = data.angle * Math.PI / 180;
-        snake.moveTo(data.x, data.y);
-      } else {
-        snakes.set(
-          data.id,
-          (snake = new Snake(
-            {
-              x: data.x,
-              y: data.y,
-              angle: data.angle * Math.PI / 180,
-              size: data.size,
-              fillColor: '#ccc',
-              length: data.bodys.length / 2,
-            },
-            data.bodys,
-          )),
-        );
-      }
+            snake.sync(packet.size, packet.length, movement);
+          } else {
+            snake = new CustomSnake({
+              x: packet.x,
+              y: packet.y,
+              angle: packet.angle,
+              size: packet.size,
+              length: packet.length,
+              fillColor: '#666',
+            });
+            snakes.set(packet.id, snake);
+          }
+        } else if (item.type === utils.FOOD_TYPE) {
+          // sync food
+        }
+      });
 
       break;
 
     case config.CMD_LOSE_CONNECT:
-      const id = bitmap.data[0];
-
-      if (snakes.has(id)) {
-        snakes.delete(id);
+      packet = data.data[0].packet;
+      if (snakes.has(packet.id)) {
+        snakes.delete(packet.id);
       }
       break;
 
@@ -163,22 +165,22 @@ function initGame(x: number, y: number): void {
     player = new Snake({
       x, y,
       size: 30,
-      length: 80,
+      length: 280,
       angle: Math.random() * 2 * Math.PI,
       fillColor: '#000',
     });
   }
 
-  for (let i = 0; i < 2000; i++) {
-    const point = ~~(Math.random() * 30 + 50);
-    const size = ~~(point / 3);
+  // for (let i = 0; i < 2000; i++) {
+  //   const point = ~~(Math.random() * 30 + 50);
+  //   const size = ~~(point / 3);
 
-    foods.push(new Food({
-      size, point,
-      x: ~~(Math.random() * (gameMap.width - 2 * size) + size),
-      y: ~~(Math.random() * (gameMap.height - 2 * size) + size),
-    }));
-  }
+  //   foods.push(new Food({
+  //     size, point,
+  //     x: ~~(Math.random() * (gameMap.width - 2 * size) + size),
+  //     y: ~~(Math.random() * (gameMap.height - 2 * size) + size),
+  //   }));
+  // }
 
   binding();
   animate();
@@ -201,40 +203,41 @@ function collision(dom: Base, dom2: Base, isRect?: boolean): boolean {
 
 // animation loop
 const timeout: number = 0;
-let frameCount: number = 0;
 let time: number = +new Date();
 function animate(): void {
   const newTime: number = +new Date();
-  stats.begin();
+  const snakePlayer = player instanceof Snake
+    ? player as Snake
+    : null;
 
+  stats.begin();
   if (newTime - time > timeout) {
     time = newTime;
 
     // update map and player
     gameMap.update(player, () => {
-      player.update();
-
       snakes.forEach((snake) => {
         snake.update();
       });
 
-      if (player instanceof Snake) {
-        const snake = player as Snake;
+      player.update();
+
+      if (snakePlayer) {
         foods.forEach((food) => {
           food.update();
 
-          if (!food.visible || !collision(snake, food)) {
+          if (!food.visible || !collision(snakePlayer, food)) {
             return;
           }
 
-          const added = snake.eat(food);
+          const added = snakePlayer.eat(food);
           foods.splice(foods.indexOf(food), 1);
 
           // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-          // const newScale = gameMap.scale + added / (snake.width * 4);
-          // if (newScale < 1.4) {
-          //   gameMap.setToScale(newScale);
-          // }
+          const newScale = gameMap.scale + added / (snakePlayer.width * 4);
+          if (newScale < 1.4) {
+            gameMap.setToScale(newScale);
+          }
         });
       }
     });
@@ -246,34 +249,15 @@ function animate(): void {
     //   gameMap.ctx.stroke();
     // }
 
-    if (!(player instanceof Observer) && playerId) {
-      frameCount++;
-
-      // sync data per second
-      // if (frameCount > config.SYNC_PER_FRAME) {
-      //   const bodys: Array<number> = [];
-      //   (<Snake>player).bodys.forEach(body => {
-      //     bodys.push(body.x.toFixed(2), body.y.toFixed(2));
-      //   });
-
-      //   sendData(
-      //     {
-      //       opt: config.CMD_SYNC_MAIN_COORD,
-      //       data: utils.objToArray(
-      //         {
-      //           id: playerId,
-      //           angle: ((<Snake>player).header.angle * (180 / Math.PI)) % 360,
-      //           size: (<Snake>player).header.width,
-      //           x: (<Snake>player).header.x.toFixed(2),
-      //           y: (<Snake>player).header.y.toFixed(2),
-      //           bodys,
-      //         },
-      //         'snake'
-      //       ),
-      //     },
-      //     true
-      //   );
-      // }
+    if (snakePlayer && playerId) {
+      sendData(config.CMD_SYNC_MAIN_COORD, utils.SNAKE_TYPE, {
+        id: playerId,
+        size: snakePlayer.width,
+        speed: snakePlayer.speed,
+        length: snakePlayer.length,
+        x: snakePlayer.x,
+        y: snakePlayer.y,
+      });
     }
   }
 
@@ -281,18 +265,12 @@ function animate(): void {
   raf(animate);
 }
 
-/**
- * send data
- */
-function sendData(data: utils.Bitmap, isBuffer: boolean): void {
-  let buf: ArrayBuffer | string;
-  if (isBuffer) {
-    buf = utils.encode(data);
-  } else {
-    buf = JSON.stringify(data);
-  }
-
-  ws.send(buf);
+// send data
+function sendData(opt: number, type: number, packet: any): void {
+  ws.send(utils.encode({
+    opt,
+    data: { type, packet },
+  }));
 }
 
 /**
