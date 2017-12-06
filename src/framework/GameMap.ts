@@ -7,13 +7,13 @@ import { View, ViewTracker } from './View';
 export class GameMap extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
   public view: View;
-  public smallmap: SmallMap;
+  public smallMap: SmallMap;
   public readonly width: number = MAP_WIDTH;
   public readonly height: number = MAP_HEIGHT;
   public paintWidth: number;
   public paintHeight: number;
 
-  // 地图瓦片
+  // map tile
   private tileImage: HTMLCanvasElement = document.createElement('canvas');
   private viewWidth: number;
   private viewHeight: number;
@@ -31,13 +31,11 @@ export class GameMap extends EventEmitter {
     this.ctx = this.canvas.getContext('2d');
     this.paintSizeReset();
     this.view = new View(this, vWidth, vHeight);
-    this.smallmap = new SmallMap(this, 30, 50);
+    this.smallMap = new SmallMap(this, 30, 50);
     this.createTile();
   }
 
-  /**
-   * 设置map的缩放比例
-   */
+  // set scale
   public setScale(scale: number): void {
     if (this.scale === scale) {
       return;
@@ -48,32 +46,21 @@ export class GameMap extends EventEmitter {
     this.emit('scale_changed');
   }
 
-  /**
-   * 设置目标scale
-   */
+  // set toScale for creating animate
   public setToScale(scale: number): void {
     this.toScale = scale;
   }
 
-  /**
-   * 相对于地图scale的值
-   * @param val
-   * @returns {*}
-   */
+  // relative to scale
   public relative(val: number): number {
     return val / this.scale;
   }
 
-  /**
-   * 清空画布
-   */
   public clear(): void {
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);
   }
 
-  /**
-   * 对地图本身的更新都在此处进行
-   */
+  // update status
   public update(player: ViewTracker, callback: () => void): void {
     if (this.toScale && this.scale !== this.toScale) {
       // const scaleDis = this.toScale - this.scale;
@@ -90,12 +77,10 @@ export class GameMap extends EventEmitter {
     this.view.track(player);
     this.render();
     callback();
-    this.smallmap.render();
+    this.smallMap.render();
   }
 
-  /**
-   * 限制element的位置
-   */
+  // limit element, prevent it moving to outside
   public limit(element: { x: number, y: number, width?: number, height?: number }): void {
     const whalf: number = (element.width || 1) / 2;
     if (element.x < whalf) {
@@ -112,9 +97,7 @@ export class GameMap extends EventEmitter {
     }
   }
 
-  /**
-   * 渲染地图
-   */
+  // render map
   public render(): void {
     const view = this.view;
     const tileWid = this.relative(this.tileImage.width);
@@ -142,37 +125,19 @@ export class GameMap extends EventEmitter {
     this.ctx.restore();
   }
 
-  /**
-   * 获取缩略图
-   */
-  public getThumbnail(width: number, height: number): HTMLCanvasElement {
-    const image = document.createElement('canvas');
-    image.width = width;
-    image.height = height;
-    this.drawPattern(image, this.width / width);
-    return image;
-  }
-
-  /**
-   * 绘制参数变更
-   */
   private paintSizeReset(): void {
     this.paintWidth = this.relative(this.width);
     this.paintHeight = this.relative(this.height);
   }
 
-  /**
-   * 创建瓦片
-   */
+  // create tile
   private createTile() {
     this.tileImage.width = MAP_RECT_WIDTH * 10;
     this.tileImage.height = MAP_RECT_HEIGHT * 10;
     this.drawPattern(this.tileImage);
   }
 
-  /**
-   * 绘制花纹
-   */
+  // draw pattern
   private drawPattern(image: HTMLCanvasElement, ratio: number = 1) {
     const ctx = image.getContext('2d');
     const colors: string[] = ['#ccc', '#999'];

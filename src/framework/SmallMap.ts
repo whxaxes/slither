@@ -1,6 +1,5 @@
 import { GameMap } from './GameMap';
 
-// 小地图类
 export class SmallMap {
   private image: HTMLCanvasElement = document.createElement('canvas');
   private smallMapWid: number;
@@ -35,7 +34,7 @@ export class SmallMap {
     const smallRectX = this.radius - this.smallMapWid / 2;
     const smallRectY = this.radius - this.smallMapHei / 2;
 
-    // 画背景
+    // draw background
     ctx.save();
     ctx.beginPath();
     ctx.arc(this.radius, this.radius, this.radius - 1, 0, Math.PI * 2);
@@ -46,20 +45,18 @@ export class SmallMap {
     ctx.strokeStyle = '#fff';
     ctx.stroke();
 
-    // 绘制地图缩略图
-    ctx.drawImage(
-      this.gameMap.getThumbnail(this.smallMapWid, this.smallMapHei),
-      smallRectX, smallRectY, this.smallMapWid, this.smallMapHei,
-    );
+    // draw map
+    ctx.fillStyle = '#ccc';
+    ctx.fillRect(smallRectX, smallRectY, this.smallMapWid, this.smallMapHei);
     ctx.restore();
   }
 
   public render() {
-    // 相对比例
+    // relative ratio
     const radio = this.smallMapWid / this.gameMap.paintWidth;
     const ctx: CanvasRenderingContext2D = this.gameMap.ctx;
 
-    // 视窗在小地图中的位置和大小
+    // area and position of window
     const smallViewX = this.gameMap.view.x * radio + this.mapX;
     const smallViewY = this.gameMap.view.y * radio + this.mapY;
     const smallViewW = this.gameMap.view.width * radio;
@@ -67,12 +64,16 @@ export class SmallMap {
 
     ctx.save();
     ctx.globalAlpha = 0.8;
-
     ctx.drawImage(this.image, this.x, this.y);
 
-    // 画视窗
-    ctx.strokeStyle = '#fff';
-    ctx.strokeRect(smallViewX, smallViewY, smallViewW, smallViewH);
+    // draw window
+    // ctx.strokeStyle = '#fff';
+    // ctx.strokeRect(smallViewX, smallViewY, smallViewW, smallViewH);
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(
+      smallViewX + smallViewW / 2 - 2, smallViewY + smallViewH / 2 - 2,
+      4, 4,
+    );
 
     ctx.restore();
   }

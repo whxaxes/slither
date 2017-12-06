@@ -2,8 +2,6 @@
 export function getSnakeHeader(
   width: number,
   height: number,
-  fillColor: string,
-  strokeColor: string,
 ): HTMLCanvasElement {
   const img: HTMLCanvasElement = document.createElement('canvas');
   const ctx: CanvasRenderingContext2D = img.getContext('2d');
@@ -17,7 +15,7 @@ export function getSnakeHeader(
   function drawEye(eyeX: number, eyeY: number): void {
     ctx.beginPath();
     ctx.fillStyle = '#fff';
-    ctx.strokeStyle = strokeColor;
+    ctx.strokeStyle = '#000';
     ctx.arc(eyeX, eyeY, eyeRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();

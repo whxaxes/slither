@@ -19,11 +19,15 @@ export class Food extends Base {
   }
 
   public action() {
+    if (!this.visible) {
+      return;
+    }
+
     const lightSpeed = 1;
 
     this.lightSize += this.lightDirection ? lightSpeed : -lightSpeed;
 
-    // 当发光圈到达一定值再缩小
+    // light animate
     if (this.lightSize > this.width || this.lightSize < this.width / 2) {
       this.lightDirection = !this.lightDirection;
     }
@@ -34,25 +38,22 @@ export class Food extends Base {
       return;
     }
 
-    const ctx = gameMap.ctx;
+    gameMap.ctx.fillStyle = '#fff';
 
-    ctx.fillStyle = '#fff';
-
-    // 绘制光圈
-    ctx.globalAlpha = 0.2;
-    ctx.beginPath();
-    ctx.arc(
+    // draw light
+    gameMap.ctx.globalAlpha = 0.2;
+    gameMap.ctx.beginPath();
+    gameMap.ctx.arc(
       this.paintX,
       this.paintY,
       this.lightSize * this.paintWidth / this.width,
       0, Math.PI * 2,
     );
-    ctx.fill();
+    gameMap.ctx.fill();
 
-    // 绘制实体
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(this.paintX, this.paintY, this.paintWidth / 2, 0, Math.PI * 2);
-    ctx.fill();
+    gameMap.ctx.globalAlpha = 1;
+    gameMap.ctx.beginPath();
+    gameMap.ctx.arc(this.paintX, this.paintY, this.paintWidth / 2, 0, Math.PI * 2);
+    gameMap.ctx.fill();
   }
 }

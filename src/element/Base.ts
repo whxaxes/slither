@@ -32,7 +32,7 @@ export abstract class Base {
   }
 
   /**
-   * 基础元素在地图中的更新
+   * update status
    */
   public update(): void {
     this.prepare();

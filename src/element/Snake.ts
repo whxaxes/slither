@@ -38,6 +38,7 @@ export class Snake extends Base implements ObserverInterface {
   // max length of queue
   public movementQueueLen: number;
   public speed: number = SPEED;
+  public oldSpeed: number = SPEED;
   private length: number;
   private toAngle: number;
   private vx: number = 0;
@@ -48,15 +49,20 @@ export class Snake extends Base implements ObserverInterface {
     bodyCoords?: number[],
   ) {
     super(options);
-    const imgWidth: number = 60;
-    const imgHeight: number = 60;
     const strokeColor: string = options.strokeColor || '#000';
     this.fillColor = options.fillColor || '#fff';
-    this.img = getSnakeHeader(imgWidth, imgHeight, this.fillColor, strokeColor);
     this.toAngle = this.angle = (options.angle || 0) + BASE_ANGLE;
     this.length = options.length;
-    this.updateMovement();
+    this.updateSize();
     this.velocity();
+  }
+
+  public updateSize(added: number = 0): void {
+    this.width += added;
+    this.height += added;
+    this.length += added * 50;
+    this.img = getSnakeHeader(this.width, this.height);
+    this.movementQueueLen = Math.ceil(this.length / this.oldSpeed);
   }
 
   // move to new position
@@ -133,6 +139,7 @@ export class Snake extends Base implements ObserverInterface {
     }
 
     this.isSpeedUp = true;
+    this.oldSpeed = this.speed;
     this.speed *= 2;
   }
 
@@ -142,27 +149,21 @@ export class Snake extends Base implements ObserverInterface {
     }
 
     this.isSpeedUp = false;
-    this.speed /= 2;
+    this.speed = this.oldSpeed;
   }
 
   // eat food
-  public eat(food: Food) {
+  public eat(food: Food): number {
     this.point += food.point;
 
     // add points
-    const added = food.point / 80;
-    // this.setSize(this.width + added);
-  }
-
-  public updateMovement() {
-    this.movementQueueLen = Math.ceil(this.length / this.speed);
+    const added = food.point / 200;
+    this.updateSize(added);
+    return added;
   }
 
   // snake action
   public action() {
-    // avoid moving to outside
-    gameMap.limit(this);
-
     // save movement
     this.movementQueue.push(
       new Movements(this.x, this.y, this.speed, this.angle),
@@ -176,6 +177,9 @@ export class Snake extends Base implements ObserverInterface {
     this.velocity();
     this.x += this.vx;
     this.y += this.vy;
+
+    // avoid moving to outside
+    gameMap.limit(this);
   }
 
   // render snake
@@ -190,17 +194,14 @@ export class Snake extends Base implements ObserverInterface {
       let i = this.movementQueue.length - 1;
       while (i) {
         const movement = this.movementQueue[i];
-        const x = movement.x;
-        const y = movement.y;
-        if (wholeLength && wholeLength < movement.speed) {
-          // const lm = this.movementQueue[i + 1];
-          // const len = Math.sqrt(Math.pow(lm.x - x, 2) + Math.pow(lm.y - y, 2)) - 2;
-          // const ratio = (len - wholeLength) / len;
-          // x = lm.x - (lm.x - x) * ratio;
-          // y = lm.y - (lm.y - y) * ratio;
-          // gameMap.ctx.lineTo(gameMap.view.relativeX(x), gameMap.view.relativeY(y));
-          break;
-        } else if (!wholeLength) {
+        let x = movement.x;
+        let y = movement.y;
+        if (wholeLength > 0 && wholeLength < movement.speed) {
+          const lm = this.movementQueue[i + 1] || this;
+          const ratio = wholeLength / movement.speed;
+          x = lm.x - (lm.x - x) * ratio;
+          y = lm.y - (lm.y - y) * ratio;
+        } else if (wholeLength < 0) {
           break;
         }
 
@@ -210,11 +211,9 @@ export class Snake extends Base implements ObserverInterface {
       }
     }
 
-    gameMap.ctx.shadowColor = '#fff';
-    gameMap.ctx.shadowBlur = 9;
     gameMap.ctx.lineCap = 'round';
     gameMap.ctx.lineJoin = 'round';
-    gameMap.ctx.strokeStyle = '#000';
+    gameMap.ctx.strokeStyle = this.fillColor;
     gameMap.ctx.lineWidth = this.width;
     gameMap.ctx.stroke();
     gameMap.ctx.restore();

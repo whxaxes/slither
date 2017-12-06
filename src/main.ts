@@ -160,29 +160,25 @@ function initGame(x: number, y: number): void {
   if (isObserver) {
     player = new Observer(gameMap.width / 2, gameMap.height / 2);
   } else {
-    player = new Snake(
-      {
-        x,
-        y,
-        size: 60,
-        length: 1580,
-        angle: Math.random() * 2 * Math.PI,
-        fillColor: '#fff',
-        strokeColor: '#333',
-      },
-    );
+    player = new Snake({
+      x, y,
+      size: 30,
+      length: 80,
+      angle: Math.random() * 2 * Math.PI,
+      fillColor: '#000',
+    });
   }
 
-  // for (let i = 0; i < 100; i++) {
-  //   const point = ~~(Math.random() * 30 + 50);
-  //   const size = ~~(point / 3);
+  for (let i = 0; i < 2000; i++) {
+    const point = ~~(Math.random() * 30 + 50);
+    const size = ~~(point / 3);
 
-  //   foods.push(new Food({
-  //     size, point,
-  //     x: ~~(Math.random() * (gameMap.width - 2 * size) + size),
-  //     y: ~~(Math.random() * (gameMap.height - 2 * size) + size)
-  //   }));
-  // }
+    foods.push(new Food({
+      size, point,
+      x: ~~(Math.random() * (gameMap.width - 2 * size) + size),
+      y: ~~(Math.random() * (gameMap.height - 2 * size) + size),
+    }));
+  }
 
   binding();
   animate();
@@ -191,59 +187,56 @@ function initGame(x: number, y: number): void {
 /**
  * collision check
  */
-function collision(dom: Base, dom2: Base, isRect?: boolean) {
+function collision(dom: Base, dom2: Base, isRect?: boolean): boolean {
   const disX = dom.x - dom2.x;
   const disY = dom.y - dom2.y;
+  const dw = dom.width + dom2.width;
 
-  if (isRect) {
-    return (
-      Math.abs(disX) < dom.width + dom2.width &&
-      Math.abs(disY) < dom.height + dom2.height
-    );
+  if (Math.abs(disX) > dw || Math.abs(disY) > dom.height + dom2.height) {
+    return false;
   }
 
-  return Math.hypot(disX, disY) < (dom.width + dom2.width) / 2;
+  return isRect ? true : (Math.hypot(disX, disY) < dw / 2);
 }
 
 // animation loop
 const timeout: number = 0;
-let framecount: number = 0;
+let frameCount: number = 0;
 let time: number = +new Date();
 function animate(): void {
-  const ntime: number = +new Date();
+  const newTime: number = +new Date();
   stats.begin();
 
-  if (ntime - time > timeout) {
-    time = ntime;
+  if (newTime - time > timeout) {
+    time = newTime;
 
     // update map and player
     gameMap.update(player, () => {
       player.update();
 
-      // snakes.forEach((snake) => {
-      //   snake.update();
-      // });
+      snakes.forEach((snake) => {
+        snake.update();
+      });
 
-      // if (player instanceof Snake) {
-      //   // 渲染食物, 以及检测食物与蛇头的碰撞
-      //   foods.forEach((food) => {
-      //     food.update();
+      if (player instanceof Snake) {
+        const snake = player as Snake;
+        foods.forEach((food) => {
+          food.update();
 
-      //     if (food.visible && collision((player as Snake).header, food)) {
-      //       const added = (player as Snake).eat(food);
-      //       foods.splice(foods.indexOf(food), 1);
+          if (!food.visible || !collision(snake, food)) {
+            return;
+          }
 
-      //       // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
-      //       const newscale =
-      //         gameMap.scale + added / ((player as Snake).header.width * 4);
-      //       if (newscale < 1.4) {
-      //         gameMap.setToScale(newscale);
-      //       }
+          const added = snake.eat(food);
+          foods.splice(foods.indexOf(food), 1);
 
-      //       return;
-      //     }
-      //   });
-      // }
+          // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
+          // const newScale = gameMap.scale + added / (snake.width * 4);
+          // if (newScale < 1.4) {
+          //   gameMap.setToScale(newScale);
+          // }
+        });
+      }
     });
 
     // if (mouseCoords.x) {
@@ -254,10 +247,10 @@ function animate(): void {
     // }
 
     if (!(player instanceof Observer) && playerId) {
-      framecount++;
+      frameCount++;
 
       // sync data per second
-      // if (framecount > config.SYNC_PER_FRAME) {
+      // if (frameCount > config.SYNC_PER_FRAME) {
       //   const bodys: Array<number> = [];
       //   (<Snake>player).bodys.forEach(body => {
       //     bodys.push(body.x.toFixed(2), body.y.toFixed(2));
