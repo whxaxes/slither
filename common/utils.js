@@ -52,8 +52,6 @@ for (const pkey in packetTypes) {
   }
 }
 
-Buffer.poolSize = 100 * 1024;
-
 // encode data to binary data
 // { 
 //   opt: 1,
@@ -67,6 +65,7 @@ Buffer.poolSize = 100 * 1024;
 //     }
 //   }] 
 // }
+Buffer.poolSize = 100 * 1024;
 const allocLen = 1024;
 exports.encode = ({ opt, data }) => {
   const bufList = [];
@@ -79,15 +78,15 @@ exports.encode = ({ opt, data }) => {
 
   const writeUInt = (value, byteLength) => {
     byteLen += byteLength;
-    let remain = allocLen - offset;
-    if (remain < byteLength) {
-      if (remain) {
+    let less = allocLen - offset;
+    if (less < byteLength) {
+      if (less) {
         // split buffer
-        byteLength -= remain;
+        byteLength -= less;
         const i = Math.pow(2, byteLength * 8);
         const l = (value / i) >>> 0;
         value -= l * i;
-        buf.writeUIntBE(l, offset, remain);
+        buf.writeUIntBE(l, offset, less);
       }
 
       buf = Buffer.alloc(allocLen);
@@ -162,27 +161,27 @@ exports.decode = buf => {
   return json;
 };
  
-const data = { 
-  opt: 1,
-  data: [{
-    type: 1,
-    packet: {
-      x: 1000.33,
-      y: 669,
-      angle: 180,
-      size: 80,
-    }
-  }, {
-    type: 1,
-    packet: {
-      x: 10020,
-      y: 889,
-      angle: 180,
-      size: 80,
-    }
-  }]
-};
-const buf = exports.encode(data);
+// const data = { 
+//   opt: 1,
+//   data: [{
+//     type: 1,
+//     packet: {
+//       x: 1000.33,
+//       y: 669,
+//       angle: 180,
+//       size: 80,
+//     }
+//   }, {
+//     type: 1,
+//     packet: {
+//       x: 10020,
+//       y: 889,
+//       angle: 180,
+//       size: 80,
+//     }
+//   }]
+// };
+// const buf = exports.encode(data);
 
-console.log(buf);
-console.log(exports.decode(buf));
+// console.log(buf);
+// console.log(exports.decode(buf));
