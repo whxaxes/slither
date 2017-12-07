@@ -1,11 +1,16 @@
 'use strict';
 
+if (typeof window !== 'undefined') {
+  window.Buffer = require('buffer/').Buffer;
+}
+
 const OPT_LEN = 1;
 const PACKET_TYPE_LEN = 1;
 exports.SNAKE_TYPE = 1;
 exports.FOOD_TYPE = 2;
 exports.VIEW_TYPE = 3;
 exports.AREA_TYPE = 4;
+exports.SNAKE_BODY_TYPE = 5;
 
 const floatType = {
   byteLen: 3,
@@ -22,6 +27,9 @@ const packetTypes = {
     length: { byteLen: 2 },
     x: floatType,
     y: floatType,
+    body: {
+      byteLen: 2,
+    }
   },
 
   [exports.FOOD_TYPE]: {
@@ -44,70 +52,7 @@ for (const pkey in packetTypes) {
   }
 }
 
-Uint8Array.prototype.setUint = function(value, offset, byteLength) {
-  value = +value;
-  offset = offset >>> 0;
-  byteLength = byteLength >>> 0;
-  let i = byteLength - 1;
-  let mul = 1;
-  this[offset + i] = value;
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) >>> 0;
-  }
-  return offset + byteLength;
-};
-
-Uint8Array.prototype.getUint = function(offset, byteLength) {
-  offset = offset >>> 0;
-  byteLength = byteLength >>> 0;
-  let val = this[offset + --byteLength];
-  let mul = 1;
-  while (byteLength > 0 && (mul *= 0x100)) {
-    val += this[offset + --byteLength] * mul;
-  }
-  return val;
-};
-
-// allocate buffer and return a dataview
-const allocate = (() => {
-  if (!Buffer || !Buffer.allocate) {
-    const poolSize = 24 * 1024;
-    let allocPool, poolOffset;
-
-    const createArrayBuffer = size => {
-      return new ArrayBuffer(size);
-    };
-
-    const createPool = () => {
-      allocPool = createArrayBuffer(poolSize);
-      poolOffset = 0;
-    };
-
-    const createBuf = (arraybuffer, offset, length) => {
-      return new Uint8Array(arraybuffer, offset, length);
-    };
-
-    createPool();
-
-    return size => {
-      if (size < poolSize) {
-        if (size > poolSize - poolOffset) {
-          poolOffset = 0;
-        }
-        const buf = createBuf(allocPool, poolOffset, size);
-        poolOffset += size;
-        return buf;
-      } else {
-        return createBuf(createArrayBuffer(size), 0, size);
-      }
-    };
-  } else {
-    Buffer.poolSize = 100 * 1024;
-    return size => {
-      return Buffer.allocate(size);
-    };
-  }
-})();
+Buffer.poolSize = 100 * 1024;
 
 // encode data to binary data
 // { 
@@ -122,26 +67,45 @@ const allocate = (() => {
 //     }
 //   }] 
 // }
+const allocLen = 1024;
 exports.encode = ({ opt, data }) => {
+  const bufList = [];
+  let byteLen = 0;
+  let offset = 0;
+
   data = Array.isArray(data) ? data : [data];
-  let bufLen = OPT_LEN;
+  let buf = Buffer.alloc(allocLen);
+  bufList.push(buf);
 
-  // calculate buffer length
-  data.forEach(item => {
-    const packetType = packetTypes[item.type];
-    const packetDataLen = packetLenMap[item.type] + PACKET_TYPE_LEN;
-    bufLen += packetDataLen;
-  });
+  const writeUInt = (value, byteLength) => {
+    byteLen += byteLength;
+    let remain = allocLen - offset;
+    if (remain < byteLength) {
+      if (remain) {
+        // split buffer
+        byteLength -= remain;
+        const i = Math.pow(2, byteLength * 8);
+        const l = (value / i) >>> 0;
+        value -= l * i;
+        buf.writeUIntBE(l, offset, remain);
+      }
 
-  const buf = allocate(bufLen);
-  buf[0] = opt;
+      buf = Buffer.alloc(allocLen);
+      bufList.push(buf);
+      offset = 0;
+    }
+
+    buf.writeUIntBE(value, offset, byteLength);
+    offset += byteLength;
+  };
+
+  writeUInt(opt, OPT_LEN);
 
   // set buffer
-  let offset = OPT_LEN;
   data.forEach(item => {
     const packetType = packetTypes[item.type];
-    buf.setUint(item.type, offset, PACKET_TYPE_LEN);
-    offset += PACKET_TYPE_LEN;
+    writeUInt(item.type, PACKET_TYPE_LEN);
+
     for (const key in packetType) {
       let value = +item.packet[key] || 0;
       const packetItem = packetType[key];
@@ -149,12 +113,15 @@ exports.encode = ({ opt, data }) => {
       if (packetItem.encode) {
         value = packetItem.encode(value);
       }
-      buf.setUint(value, offset, byteLength);
-      offset += byteLength;
+      writeUInt(value, byteLength);
     }
   });
 
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + bufLen);
+  if (bufList.length > 1) {
+    buf = Buffer.concat(bufList, bufList.length * allocLen);
+  }
+
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + byteLen);
 };
 
 // decode binary data to json
@@ -163,7 +130,7 @@ exports.decode = buf => {
 
   // buf may be node buffer
   if (!ArrayBuffer.isView(buf)) {
-    buf = new Uint8Array(buf);
+    buf = Buffer.from(buf);
   }
 
   json.opt = buf[0];
@@ -180,7 +147,7 @@ exports.decode = buf => {
     for (const key in packetType) {
       const packetItem = packetType[key];
       const byteLen = packetItem.byteLen;
-      const value = buf.getUint(i, byteLen);
+      const value = buf.readUIntBE(i, byteLen);
       data[key] = packetItem.decode 
         ? packetItem.decode(value)
         : value;
@@ -195,26 +162,27 @@ exports.decode = buf => {
   return json;
 };
  
-// const data = { 
-//   opt: 1,
-//   data: [{
-//     type: 1,
-//     packet: {
-//       x: 1000.33,
-//       y: 669,
-//       angle: 180,
-//       size: 80,
-//     }
-//   }, {
-//     type: 1,
-//     packet: {
-//       x: 10020,
-//       y: 889,
-//       angle: 180,
-//       size: 80,
-//     }
-//   }]
-// };
-// const buf = exports.encode(data);
+const data = { 
+  opt: 1,
+  data: [{
+    type: 1,
+    packet: {
+      x: 1000.33,
+      y: 669,
+      angle: 180,
+      size: 80,
+    }
+  }, {
+    type: 1,
+    packet: {
+      x: 10020,
+      y: 889,
+      angle: 180,
+      size: 80,
+    }
+  }]
+};
+const buf = exports.encode(data);
 
-// console.log(exports.decode(buf));
+console.log(buf);
+console.log(exports.decode(buf));

@@ -20,6 +20,7 @@
     "@types/node": "^8.0.53",
     "@types/stats": "^0.16.30",
     "@types/ws": "^3.2.0",
+    "buffer": "^5.0.8",
     "es6-shim": "^0.35.1",
     "eventemitter3": "^2.0.2",
     "rxjs": "^5.5.2",

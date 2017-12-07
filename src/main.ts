@@ -16,9 +16,6 @@ const canvas: HTMLCanvasElement = document.getElementById('cas') as HTMLCanvasEl
 const ip: string = (document.getElementById('ip') as HTMLInputElement).value;
 let isInit: boolean = false;
 
-// sync data frame count
-const syncFrameCount: number = 5;
-
 // player id
 let playerId: number | undefined;
 
@@ -202,7 +199,7 @@ function collision(dom: Base, dom2: Base, isRect?: boolean): boolean {
 }
 
 // animation loop
-const timeout: number = 0;
+const timeout: number = 10;
 let time: number = +new Date();
 function animate(): void {
   const newTime: number = +new Date();
