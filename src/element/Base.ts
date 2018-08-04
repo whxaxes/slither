@@ -1,4 +1,3 @@
-import { GameMap } from '~/framework/GameMap';
 import { gameMap } from '~/main';
 
 export interface BaseOptions {
@@ -23,8 +22,8 @@ export abstract class Base {
   constructor(options: BaseOptions) {
     this.x = +(options.x || 0);
     this.y = +(options.y || 0);
-    this.width = options.size || options.width;
-    this.height = options.size || options.height;
+    this.width = options.size || options.width || 0;
+    this.height = options.size || options.height || 0;
 
     if (!this.width || !this.height) {
       throw new Error('element size can not be undefined');

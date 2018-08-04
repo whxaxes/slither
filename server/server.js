@@ -1,8 +1,8 @@
 'use strict';
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
-const config = require('../common/config');
-const utils = require('../common/utils');
+const config = require('../src/common/config');
+const utils = require('../src/common/utils');
 const wss = new WebSocketServer({ port: config.socketPort });
 let stack = [];
 let idKey = 0;
@@ -18,7 +18,7 @@ setInterval(() => {
 
     stack.length = 0;
   }
-}, 16);
+}, 100);
 
 wss.on('connection', ws => {
   console.log('socket connected');

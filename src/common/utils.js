@@ -27,9 +27,6 @@ const packetTypes = {
     length: { byteLen: 2 },
     x: floatType,
     y: floatType,
-    body: {
-      byteLen: 2,
-    }
   },
 
   [exports.FOOD_TYPE]: {
@@ -42,15 +39,6 @@ const packetTypes = {
     height: { byteLen: 2 },
   },
 };
-
-const packetLenMap = {};
-for (const pkey in packetTypes) {
-  const packet = packetTypes[pkey];
-  packetLenMap[pkey] = 0;
-  for (const key in packet) {
-    packetLenMap[pkey] += packet[key].byteLen;
-  }
-}
 
 // encode data to binary data
 // { 
@@ -161,27 +149,36 @@ exports.decode = buf => {
   return json;
 };
  
-// const data = { 
-//   opt: 1,
-//   data: [{
-//     type: 1,
-//     packet: {
-//       x: 1000.33,
-//       y: 669,
-//       angle: 180,
-//       size: 80,
-//     }
-//   }, {
-//     type: 1,
-//     packet: {
-//       x: 10020,
-//       y: 889,
-//       angle: 180,
-//       size: 80,
-//     }
-//   }]
-// };
-// const buf = exports.encode(data);
+const data = { 
+  opt: 1,
+  data: [{
+    type: 1,
+    packet: {
+      x: 1000.33,
+      y: 669,
+      angle: 180,
+      size: 80,
+    }
+  }, {
+    type: 1,
+    packet: {
+      x: 10020,
+      y: 889,
+      angle: 180,
+      size: 80,
+    }
+  }, {
+    type: 1,
+    packet: {
+      x: 10020,
+      y: 889,
+      angle: 180,
+      size: 80,
+    }
+  }]
+};
 
-// console.log(buf);
+// const buf = exports.encode(data);
+// console.log(buf.byteLength);
+// console.log(Buffer.byteLength(JSON.stringify(data)));
 // console.log(exports.decode(buf));

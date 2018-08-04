@@ -1,6 +1,5 @@
-import { SPEED } from 'common/config';
+import { SPEED } from '~/common/config';
 import { gameMap } from '~/main';
-import { GameMap } from './GameMap';
 
 export interface ObserverInterface {
   x: number;

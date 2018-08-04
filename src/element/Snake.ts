@@ -1,5 +1,4 @@
-import { BASE_ANGLE, SPEED, SYNC_PER_FRAME } from 'common/config';
-import { GameMap } from '~/framework/GameMap';
+import { BASE_ANGLE, SPEED } from '~/common/config';
 import { getSnakeHeader } from '~/libs/imageStore';
 import { gameMap } from '~/main';
 import { Base, BaseOptions } from './Base';
@@ -9,7 +8,6 @@ interface SnakeOptions extends BaseOptions {
   length?: number;
   angle?: number;
   fillColor?: string;
-  strokeColor?: string;
 }
 
 export class Movement {
@@ -22,7 +20,7 @@ export class Movement {
 }
 
 export class Snake extends Base {
-  public img?: HTMLCanvasElement;
+  public img: HTMLCanvasElement;
   public point: number = 0;
   public isSpeedUp: boolean = false;
   public fillColor: string = '';
@@ -44,10 +42,9 @@ export class Snake extends Base {
 
   constructor(options: SnakeOptions) {
     super(options);
-    const strokeColor: string = options.strokeColor || '#000';
     this.fillColor = options.fillColor || '#fff';
     this.toAngle = this.angle = (options.angle || 0) + BASE_ANGLE;
-    this.length = options.length;
+    this.length = options.length || 0;
     this.updateSize();
     this.velocity();
   }
@@ -264,6 +261,10 @@ export class CustomSnake extends Snake {
     const start = this.moveList.length - this.animateStep;
     this.moveList = this.moveList.slice(0, (start < 0 ? 0 : start) + 1);
     const movement = this.moveList.shift();
+    if (!movement) {
+      return;
+    }
+
     this.lastMovement = movement;
     this.moveTo(movement.x, movement.y);
     this.toAngle = this.angle = BASE_ANGLE + this.toAngle % (Math.PI * 2);

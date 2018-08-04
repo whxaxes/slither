@@ -22,7 +22,7 @@ export class SmallMap {
     this.y = this.gameMap.view.height - this.radius * 2 - this.margin;
     this.mapX = this.x + this.radius / 2;
     this.mapY = this.y + this.radius / 2;
-    const ctx: CanvasRenderingContext2D = this.image.getContext('2d');
+    const ctx = this.image.getContext('2d')!;
 
     this.smallMapWid = this.gameMap.width > this.gameMap.height
       ? this.radius

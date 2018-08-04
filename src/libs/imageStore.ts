@@ -3,8 +3,8 @@ export function getSnakeHeader(
   width: number,
   height: number,
 ): HTMLCanvasElement {
-  const img: HTMLCanvasElement = document.createElement('canvas');
-  const ctx: CanvasRenderingContext2D = img.getContext('2d');
+  const img = document.createElement('canvas');
+  const ctx = img.getContext('2d')!;
   const dis: number = 2;
 
   img.width = width + dis * 2;

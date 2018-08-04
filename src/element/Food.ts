@@ -1,4 +1,3 @@
-import { GameMap } from '~/framework/GameMap';
 import { gameMap } from '~/main';
 import { Base, BaseOptions } from './Base';
 

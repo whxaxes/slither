@@ -2,17 +2,38 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "strict": true,
     "moduleResolution": "node",
-    "sourceMap": true,
-    "emitDecoratorMetadata": true,
+    "noImplicitAny": false,
     "experimentalDecorators": true,
-    "removeComments": false,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
+    "emitDecoratorMetadata": true,
+    "charset": "utf8",
+    "allowJs": false,
+    "pretty": true,
+    "noEmitOnError": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "strictPropertyInitialization": false,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "inlineSourceMap": true,
+    "importHelpers": true,
     "baseUrl": ".",
+    "lib": ["dom", "es2017"],
+    "types": ["es6-shim"],
     "paths": {
       "~/*": ["./src/*"],
-      "common/*": ["./common/*"]
+      "~common/*": ["./common/*"]
     }
-  }
+  },
+  "parcelTsPluginOptions": {
+    "transpileOnly": false
+  },
+  "include": [
+    "**/*"
+  ]
 }

@@ -1,7 +1,7 @@
-import * as config from 'common/config';
-import * as utils from 'common/utils';
 import 'es6-shim';
 import Stats = require('stats.js');
+import * as config from '~/common/config';
+import * as utils from '~/common/utils';
 import { Base } from '~/element/Base';
 import { Food } from '~/element/Food';
 import { CustomSnake, Movement, Snake } from '~/element/Snake';
@@ -50,7 +50,7 @@ const enum KeyCodes {
 const foods: Food[] = [];
 
 // fps state
-const stats: Stats = new Stats();
+const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // websocket
@@ -69,7 +69,7 @@ ws.onerror = () => {
   console.log('error');
 };
 
-ws.onclose = (...args: any[]) => {
+ws.onclose = () => {
   if (isInit) {
     return;
   }
@@ -110,7 +110,7 @@ ws.onmessage = (e) => {
           if (playerId === packet.id) {
             return;
           } else if (snakes.has(packet.id)) {
-            snake = snakes.get(packet.id);
+            snake = snakes.get(packet.id) as CustomSnake;
             const movement = new Movement(
               packet.x,
               packet.y,
@@ -298,7 +298,7 @@ function binding() {
     window.addEventListener('touchmove', mousemove);
 
     if (player instanceof Observer) {
-      window.addEventListener('touchend', (e) => {
+      window.addEventListener('touchend', () => {
         (player as Observer).stop();
       });
     }
@@ -308,6 +308,7 @@ function binding() {
 
     if (player instanceof Snake) {
       const pl = player as Snake;
+
       // speedup
       window.addEventListener('mousedown', () => {
         pl.speedUp();

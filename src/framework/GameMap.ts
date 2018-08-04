@@ -1,5 +1,5 @@
-import { MAP_HEIGHT, MAP_RECT_HEIGHT, MAP_RECT_WIDTH, MAP_WIDTH } from 'common/config';
 import { EventEmitter } from 'eventemitter3';
+import { MAP_HEIGHT, MAP_RECT_HEIGHT, MAP_RECT_WIDTH, MAP_WIDTH } from '~/common/config';
 import { SmallMap } from './SmallMap';
 import { View, ViewTracker } from './View';
 
@@ -15,8 +15,6 @@ export class GameMap extends EventEmitter {
 
   // map tile
   private tileImage: HTMLCanvasElement = document.createElement('canvas');
-  private viewWidth: number;
-  private viewHeight: number;
   private toScale: number;
 
   constructor(
@@ -28,7 +26,7 @@ export class GameMap extends EventEmitter {
     super();
     this.canvas.width = vWidth;
     this.canvas.height = vHeight;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
     this.paintSizeReset();
     this.view = new View(this, vWidth, vHeight);
     this.smallMap = new SmallMap(this, 30, 50);
@@ -139,7 +137,7 @@ export class GameMap extends EventEmitter {
 
   // draw pattern
   private drawPattern(image: HTMLCanvasElement, ratio: number = 1) {
-    const ctx = image.getContext('2d');
+    const ctx = image.getContext('2d')!;
     const colors: string[] = ['#ccc', '#999'];
     let color: string;
     const width = image.width * ratio;
