@@ -4,10 +4,10 @@
   "description": "slither game",
   "main": "",
   "scripts": {
-    "dev": "concurrently \"npm run build\" \"npm run server\"",
+    "dev": "npm run server",
     "server": "pm2-dev start process.json",
-    "build": "parcel -p 9030 ./src/index.html --open",
-    "release": "webpack --config ./build/webpack.dist.js --progress",
+    "build": "parcel ./src/index.html --open",
+    "release": "parcel build ./src/index.html",
     "upgrade": "yarn upgrade-interactive"
   },
   "keywords": [

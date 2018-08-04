@@ -1,5 +1,4 @@
 import 'es6-shim';
-import Stats = require('stats.js');
 import * as config from '~/common/config';
 import * as utils from '~/common/utils';
 import { Base } from '~/element/Base';
@@ -8,12 +7,15 @@ import { CustomSnake, Movement, Snake } from '~/element/Snake';
 import { GameMap } from '~/framework/GameMap';
 import { Observer } from '~/framework/Observer';
 
+if (module && module.hot) {
+  module.hot.accept(() => {
+    location.reload();
+  });
+}
+
 const raf: (callback: FrameRequestCallback) => {} =
   window.requestAnimationFrame || window.webkitRequestAnimationFrame;
 const canvas: HTMLCanvasElement = document.getElementById('cas') as HTMLCanvasElement;
-
-// local ip address
-const ip: string = (document.getElementById('ip') as HTMLInputElement).value;
 let isInit: boolean = false;
 
 // player id
@@ -21,7 +23,6 @@ let playerId: number | undefined;
 
 // judge player is an observer or not
 const isObserver: boolean = window.location.href.indexOf('observer=true') >= 0;
-const isStatic: boolean = window.location.href.indexOf('static=true') >= 0;
 
 // window's width and height
 const vWidth: number = window.innerWidth;
@@ -44,17 +45,17 @@ const enum KeyCodes {
   W = 87,
   S = 83,
   A = 65,
+  UP = 38,
+  RIGHT = 39,
+  DOWN = 40,
+  LEFT = 37,
 }
 
 // save food object
 const foods: Food[] = [];
 
-// fps state
-const stats = new Stats();
-document.body.appendChild(stats.dom);
-
 // websocket
-const ws: WebSocket = new WebSocket(`ws://${ip}:${config.socketPort}`);
+const ws: WebSocket = new WebSocket(`ws://${process.env.LOCAL_IP || '127.0.0.1'}:${config.socketPort}`);
 ws.binaryType = 'arraybuffer';
 
 // websocket connected
@@ -199,7 +200,7 @@ function collision(dom: Base, dom2: Base, isRect?: boolean): boolean {
 }
 
 // animation loop
-const timeout: number = 10;
+let timeout: number = 0;
 let time: number = +new Date();
 function animate(): void {
   const newTime: number = +new Date();
@@ -207,7 +208,6 @@ function animate(): void {
     ? player as Snake
     : null;
 
-  stats.begin();
   if (newTime - time > timeout) {
     time = newTime;
 
@@ -230,7 +230,7 @@ function animate(): void {
           const added = snakePlayer.eat(food);
           foods.splice(foods.indexOf(food), 1);
 
-          // 调整地图缩放比例, 调整缩放比例的时候会更新图层, 所以不再次更新
+          // limit scale
           const newScale = gameMap.scale + added / (snakePlayer.width * 4);
           if (newScale < 1.4) {
             gameMap.setToScale(newScale);
@@ -258,7 +258,6 @@ function animate(): void {
     }
   }
 
-  stats.end();
   raf(animate);
 }
 
@@ -277,18 +276,18 @@ function binding() {
   // finger|mouse move event
   function mousemove(e: MouseEvent | TouchEvent) {
     e.preventDefault();
-    if (e instanceof TouchEvent) {
+    if ((e as TouchEvent).touches) {
       mouseCoords.x = (e as TouchEvent).touches[0].pageX;
       mouseCoords.y = (e as TouchEvent).touches[0].pageY;
     } else {
-      const evt: MouseEvent = e || (window.event as MouseEvent);
+      const evt = e as MouseEvent || (window.event as MouseEvent);
       mouseCoords.x = evt.clientX;
       mouseCoords.y = evt.clientY;
     }
     const nx = (mouseCoords.x + gameMap.view.x) * gameMap.scale;
     const ny = (mouseCoords.y + gameMap.view.y) * gameMap.scale;
 
-    if (!isObserver || (isObserver && !isStatic)) {
+    if (!isObserver) {
       player.moveTo(nx, ny);
     }
   }
@@ -309,16 +308,34 @@ function binding() {
     if (player instanceof Snake) {
       const pl = player as Snake;
 
-      // speedup
+      // speed up
       window.addEventListener('mousedown', () => {
         pl.speedUp();
       });
 
-      // speeddown
+      // speed down
       window.addEventListener('mouseup', () => {
         pl.speedDown();
       });
     } else {
+      window.onmousedown = (e) => {
+        let startX = e.pageX;
+        let startY = e.pageY;
+        window.onmousemove = (e) => {
+          const newStartX = e.pageX;
+          const newStartY = e.pageY;
+          const distanceX = newStartX - startX;
+          const distanceY = newStartY - startY;
+          player.x += -distanceX;
+          player.y += -distanceY;
+          startX = newStartX;
+          startY = newStartY;
+        };
+        window.onmouseup = () => {
+          window.onmousemove = null;
+        };
+      };
+
       window.addEventListener('keyup', (e) => {
         switch (e.keyCode) {
           case KeyCodes.W:
@@ -331,6 +348,14 @@ function binding() {
 
           case KeyCodes.A:
             gameMap.setToScale(1);
+            break;
+
+          case KeyCodes.UP:
+            timeout = timeout < 5 ? 0 : (timeout - 5);
+            break;
+
+          case KeyCodes.DOWN:
+            timeout += 5;
             break;
 
           default:

@@ -1,5 +1,5 @@
 {
   "name": "slither",
   "cwd": "./server",
-  "script": "server.js"
+  "script": "index.js"
 }

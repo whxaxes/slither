@@ -33,22 +33,10 @@ export class Observer implements ObserverInterface {
     const xc: number = mx - ox;
     const yc: number = my - oy;
     const hyp: number = Math.sqrt(xc * xc + yc * yc);
-    const ratio = 2 * SPEED * gameMap.scale / hyp;
-    const limitdis = 200;
+    const ratio = SPEED * gameMap.scale / hyp;
 
-    if (Math.abs(ox + gameMap.view.width / 2 - mx) < limitdis
-      || Math.abs(oy - gameMap.view.width / 2 - mx) < limitdis) {
-      this.vx = xc * ratio;
-    } else {
-      this.vx = 0;
-    }
-
-    if (Math.abs(oy + gameMap.view.height / 2 - my) < limitdis
-      || Math.abs(oy - gameMap.view.height / 2 - my) < limitdis) {
-      this.vy = yc * ratio;
-    } else {
-      this.vy = 0;
-    }
+    this.vx = xc * ratio;
+    this.vy = yc * ratio;
   }
 
   public update() {

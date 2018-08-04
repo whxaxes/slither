@@ -15,7 +15,7 @@ export class View {
     public y: number = 0,
   ) { }
 
-  public track(obj: ViewTracker) {
+  public trace(obj: ViewTracker) {
     this.x = (obj.x / this.gameMap.scale) - this.width / 2;
     this.y = (obj.y / this.gameMap.scale) - this.height / 2;
   }

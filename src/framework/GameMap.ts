@@ -72,7 +72,7 @@ export class GameMap extends EventEmitter {
     }
 
     this.ctx.clearRect(0, 0, this.view.width, this.view.height);
-    this.view.track(player);
+    this.view.trace(player);
     this.render();
     callback();
     this.smallMap.render();
@@ -80,14 +80,14 @@ export class GameMap extends EventEmitter {
 
   // limit element, prevent it moving to outside
   public limit(element: { x: number, y: number, width?: number, height?: number }): void {
-    const whalf: number = (element.width || 1) / 2;
+    const whalf = (element.width || 1) / 2;
     if (element.x < whalf) {
       element.x = whalf;
     } else if (element.x + whalf > this.width) {
       element.x = this.width - whalf;
     }
 
-    const hhalf: number = (element.height || 1) / 2;
+    const hhalf = (element.height || 1) / 2;
     if (element.y < hhalf) {
       element.y = hhalf;
     } else if (element.y + hhalf > this.height) {
@@ -100,7 +100,6 @@ export class GameMap extends EventEmitter {
     const view = this.view;
     const tileWid = this.relative(this.tileImage.width);
     const tileHei = this.relative(this.tileImage.height);
-    this.ctx.save();
     const beginX = (view.x < 0) ? -view.x : (-view.x % tileWid);
     const beginY = (view.y < 0) ? -view.y : (-view.y % tileHei);
     const endX = (view.x + view.width > this.paintWidth)
@@ -119,8 +118,6 @@ export class GameMap extends EventEmitter {
         this.ctx.drawImage(this.tileImage, 0, 0, w * this.scale, h * this.scale, x, y, w, h);
       }
     }
-
-    this.ctx.restore();
   }
 
   private paintSizeReset(): void {
@@ -130,31 +127,30 @@ export class GameMap extends EventEmitter {
 
   // create tile
   private createTile() {
-    this.tileImage.width = MAP_RECT_WIDTH * 10;
-    this.tileImage.height = MAP_RECT_HEIGHT * 10;
+    this.tileImage.width = MAP_RECT_WIDTH * 8;
+    this.tileImage.height = MAP_RECT_HEIGHT * 8;
     this.drawPattern(this.tileImage);
   }
 
   // draw pattern
   private drawPattern(image: HTMLCanvasElement, ratio: number = 1) {
     const ctx = image.getContext('2d')!;
-    const colors: string[] = ['#ccc', '#999'];
-    let color: string;
+    const colors: string[] = ['#eee', '#aaa'];
     const width = image.width * ratio;
     const height = image.height * ratio;
     const mrw = MAP_RECT_WIDTH / ratio;
     const mrh = MAP_RECT_HEIGHT / ratio;
     for (let x = 0, i = 0; x <= width; x += mrw, i++) {
-      color = colors[i % 2];
-      for (let y = 0; y <= height; y += mrh) {
+      for (let y = 0, j = 0; y <= height; y += mrh, j++) {
         const cx = width - x;
         const cy = height - y;
         const w = cx < mrw ? cx : mrw;
         const h = cy < mrh ? cy : mrh;
-        ctx.fillStyle = color;
-        color = (color === colors[0]) ? colors[1] : colors[0];
+        ctx.fillStyle = colors[(i + j) % colors.length];
         ctx.fillRect(x, y, w, h);
       }
     }
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, width, height);
   }
 }

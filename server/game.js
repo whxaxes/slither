@@ -1,4 +1,3 @@
-'use strict';
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const config = require('../src/common/config');
@@ -9,15 +8,17 @@ let idKey = 0;
 
 console.log(`listen port ${config.socketPort}`);
 
-setInterval(() => {
-  if (stack.length) {
-    wss.broadcast(utils.encode({
-      opt: config.CMD_SYNC_OTHER_COORD,
-      data: stack,
-    }));
-
-    stack.length = 0;
+const gameLoop = setInterval(() => {
+  if (!stack.length) {
+    return;
   }
+
+  wss.broadcast(utils.encode({
+    opt: config.CMD_SYNC_OTHER_COORD,
+    data: stack,
+  }));
+
+  stack.length = 0;
 }, 100);
 
 wss.on('connection', ws => {
