@@ -9,6 +9,7 @@
     "max-classes-per-file": false,
     "no-bitwise": false,
     "no-console": false,
+    "member-access": false,
     "no-shadowed-variable": false
   },
   "rulesDirectory": []

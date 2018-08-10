@@ -4,10 +4,10 @@
   "description": "slither game",
   "main": "",
   "scripts": {
-    "dev": "npm run server",
-    "server": "pm2-dev start process.json",
-    "build": "parcel ./src/index.html --open",
-    "release": "parcel build ./src/index.html",
+    "start": "NODE_ENV=production node -r 'ts-node/register' ./server/index.ts",
+    "dev": "nodemon -r 'ts-node/register' ./server/dev.ts",
+    "build": "parcel ./web/index.html --open",
+    "release": "parcel build ./web/index.html",
     "upgrade": "yarn upgrade-interactive"
   },
   "keywords": [
@@ -20,26 +20,25 @@
   },
   "dependencies": {
     "@types/es6-shim": "^0.31.33",
-    "@types/node": "^8.0.53",
+    "@types/ip": "^0.0.31",
+    "@types/node": "^10.5.7",
     "@types/stats.js": "^0.17.0",
     "@types/ws": "^3.2.0",
     "buffer": "^5.0.8",
-    "common": "^0.2.5",
-    "es6-shim": "^0.35.1",
     "eventemitter3": "^2.0.2",
-    "stats.js": "^0.17.0",
+    "ip": "^1.1.5",
+    "ts-node": "^7.0.0",
+    "typescript": "^2.2.2",
     "ws": "^3.3.2"
   },
   "author": "wanghx",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^3.1.0",
-    "ip": "^1.1.5",
+    "es6-shim": "^0.35.1",
+    "nodemon": "^1.18.3",
     "opn": "^5.1.0",
     "parcel-bundler": "^1.9.3",
     "parcel-plugin-typescript": "^1.0.0",
-    "pm2": "^2.4.5",
-    "tslint": "^5.8.0",
-    "typescript": "^2.2.2"
+    "tslint": "^5.8.0"
   }
 }

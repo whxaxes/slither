@@ -1,25 +1,23 @@
 'use strict';
 
-if (typeof window !== 'undefined') {
-  window.Buffer = require('buffer/').Buffer;
-}
+import { Buffer } from 'buffer';
 
 const OPT_LEN = 1;
 const PACKET_TYPE_LEN = 1;
-exports.SNAKE_TYPE = 1;
-exports.FOOD_TYPE = 2;
-exports.VIEW_TYPE = 3;
-exports.AREA_TYPE = 4;
-exports.SNAKE_BODY_TYPE = 5;
+export const SNAKE_TYPE = 1;
+export const FOOD_TYPE = 2;
+export const VIEW_TYPE = 3;
+export const AREA_TYPE = 4;
+export const SNAKE_BODY_TYPE = 5;
 
 const floatType = {
   byteLen: 3,
-  encode: value => ~~(value * 100),
-  decode: value => value / 100
+  encode: (value) => ~~(value * 100),
+  decode: (value) => value / 100,
 };
 
 const packetTypes = {
-  [exports.SNAKE_TYPE]: {
+  [SNAKE_TYPE]: {
     id: { byteLen: 2 },
     angle: { byteLen: 2 },
     size: { byteLen: 2 },
@@ -29,19 +27,19 @@ const packetTypes = {
     y: floatType,
   },
 
-  [exports.FOOD_TYPE]: {
+  [FOOD_TYPE]: {
     x: floatType,
     y: floatType,
   },
 
-  [exports.VIEW_TYPE]: {
+  [VIEW_TYPE]: {
     width: { byteLen: 2 },
     height: { byteLen: 2 },
   },
 };
 
 // encode data to binary data
-// { 
+// {
 //   opt: 1,
 //   data: [{
 //     type: 1,
@@ -51,12 +49,12 @@ const packetTypes = {
 //       angle: data.angle * Math.PI / 180,
 //       size: data.size,
 //     }
-//   }] 
+//   }]
 // }
-Buffer.poolSize = 100 * 1024;
+(Buffer as any).poolSize = 100 * 1024;
 const allocLen = 1024;
-exports.encode = ({ opt, data }) => {
-  const bufList = [];
+export function encode({ opt, data }) {
+  const bufList: Buffer[] = [];
   let byteLen = 0;
   let offset = 0;
 
@@ -66,7 +64,7 @@ exports.encode = ({ opt, data }) => {
 
   const writeUInt = (value, byteLength) => {
     byteLen += byteLength;
-    let less = allocLen - offset;
+    const less = allocLen - offset;
     if (less < byteLength) {
       if (less) {
         // split buffer
@@ -89,18 +87,20 @@ exports.encode = ({ opt, data }) => {
   writeUInt(opt, OPT_LEN);
 
   // set buffer
-  data.forEach(item => {
+  data.forEach((item) => {
     const packetType = packetTypes[item.type];
     writeUInt(item.type, PACKET_TYPE_LEN);
 
     for (const key in packetType) {
-      let value = +item.packet[key] || 0;
-      const packetItem = packetType[key];
-      const byteLength = packetItem.byteLen;
-      if (packetItem.encode) {
-        value = packetItem.encode(value);
+      if (packetType.hasOwnProperty(key)) {
+        let value = +item.packet[key] || 0;
+        const packetItem = packetType[key];
+        const byteLength = packetItem.byteLen;
+        if (packetItem.encode) {
+          value = packetItem.encode(value);
+        }
+        writeUInt(value, byteLength);
       }
-      writeUInt(value, byteLength);
     }
   });
 
@@ -109,11 +109,11 @@ exports.encode = ({ opt, data }) => {
   }
 
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + byteLen);
-};
+}
 
 // decode binary data to json
-exports.decode = buf => {
-  const json = {};
+export function decode(buf) {
+  const json = {} as any;
 
   // buf may be node buffer
   if (!ArrayBuffer.isView(buf)) {
@@ -132,53 +132,20 @@ exports.decode = buf => {
     i += PACKET_TYPE_LEN;
 
     for (const key in packetType) {
-      const packetItem = packetType[key];
-      const byteLen = packetItem.byteLen;
-      const value = buf.readUIntBE(i, byteLen);
-      data[key] = packetItem.decode 
-        ? packetItem.decode(value)
-        : value;
-      i += byteLen;
+      if (packetType.hasOwnProperty(key)) {
+        const packetItem = packetType[key];
+        const byteLen = packetItem.byteLen;
+        const value = buf.readUIntBE(i, byteLen);
+        data[key] = packetItem.decode ? packetItem.decode(value) : value;
+        i += byteLen;
+      }
     }
 
     json.data.push({
-      type, packet: data,
+      type,
+      packet: data,
     });
   }
 
   return json;
-};
- 
-const data = { 
-  opt: 1,
-  data: [{
-    type: 1,
-    packet: {
-      x: 1000.33,
-      y: 669,
-      angle: 180,
-      size: 80,
-    }
-  }, {
-    type: 1,
-    packet: {
-      x: 10020,
-      y: 889,
-      angle: 180,
-      size: 80,
-    }
-  }, {
-    type: 1,
-    packet: {
-      x: 10020,
-      y: 889,
-      angle: 180,
-      size: 80,
-    }
-  }]
-};
-
-// const buf = exports.encode(data);
-// console.log(buf.byteLength);
-// console.log(Buffer.byteLength(JSON.stringify(data)));
-// console.log(exports.decode(buf));
+}

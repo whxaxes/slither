@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "es2017"],
+    "types": ["es6-shim"],
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"]
+    }
+  },
+  "parcelTsPluginOptions": {
+    "transpileOnly": false
+  }
+}

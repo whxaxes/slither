@@ -20,13 +20,6 @@ npm install
 npm run dev
 ```
 
-Open your chrome and visit [http://localhost:9999](http://localhost:9999)
-
-## Release
-```
-npm run release
-```
-
 ## Tutorial
 
 - [仿造slither.io第一步：先画条蛇](https://github.com/whxaxes/blog/issues/1)

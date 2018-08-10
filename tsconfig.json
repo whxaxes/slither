@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "module": "commonjs",
     "strict": true,
     "moduleResolution": "node",
@@ -15,22 +15,13 @@
     "noUnusedParameters": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
+    "esModuleInterop": true,
     "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "inlineSourceMap": true,
-    "importHelpers": true,
-    "baseUrl": ".",
-    "lib": ["dom", "es2017"],
-    "types": ["es6-shim"],
-    "paths": {
-      "~/*": ["./src/*"],
-      "~common/*": ["./common/*"]
-    }
-  },
-  "parcelTsPluginOptions": {
-    "transpileOnly": false
+    "importHelpers": true
   }
 }
