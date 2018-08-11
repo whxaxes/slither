@@ -5,7 +5,7 @@
   "main": "",
   "scripts": {
     "start": "NODE_ENV=production node -r 'ts-node/register' ./server/index.ts",
-    "dev": "nodemon -r 'ts-node/register' ./server/dev.ts",
+    "dev": "node -r 'ts-node/register' ./server/dev.ts",
     "build": "parcel ./web/index.html --open",
     "release": "parcel build ./web/index.html",
     "upgrade": "yarn upgrade-interactive"
@@ -19,12 +19,15 @@
     "~": "./"
   },
   "dependencies": {
+    "@types/chokidar": "^1.7.5",
     "@types/es6-shim": "^0.31.33",
     "@types/ip": "^0.0.31",
     "@types/node": "^10.5.7",
     "@types/stats.js": "^0.17.0",
     "@types/ws": "^3.2.0",
     "buffer": "^5.0.8",
+    "chokidar": "^2.0.4",
+    "concurrently": "^3.6.1",
     "eventemitter3": "^2.0.2",
     "ip": "^1.1.5",
     "ts-node": "^7.0.0",

@@ -273,7 +273,7 @@ export class CustomSnake extends Snake {
     this.speed = movement.speed;
 
     if (len > 6) {
-      this.animateStep = 3;
+      this.animateStep = 2;
     } else {
       this.animateStep = 1;
     }
